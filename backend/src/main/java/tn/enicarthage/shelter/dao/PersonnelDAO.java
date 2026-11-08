@@ -31,12 +31,13 @@ public class PersonnelDAO {
     }
 
     public Personnel findByUsername(String username) {
-        String sql = "SELECT * FROM personnel WHERE username = ?";
+        String sql = "SELECT * FROM personnel WHERE username = ? OR email = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, username);
+            statement.setString(2, username);
 
             try (ResultSet result = statement.executeQuery()) {
                 if (result.next()) {
