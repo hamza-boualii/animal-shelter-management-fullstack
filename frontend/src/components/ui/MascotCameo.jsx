@@ -10,6 +10,9 @@ import { animate } from 'animejs'
  * inclinaison/wagging, apparition en surgissement, respiration posée 'sit') sont orchestrées
  * avec précision pour donner vie au compagnon doré.
  */
+// Mascotte dorée temporairement désactivée selon les exigences de la refonte visuelle (facile à réactiver)
+const MASCOTTE_ACTIVEE = false
+
 export default function MascotCameo({
   mode = 'float', // 'float' | 'bounce' | 'wag' | 'peek' | 'sit'
   taille = 60,
@@ -21,6 +24,7 @@ export default function MascotCameo({
   const animRef = useRef(null)
 
   useEffect(() => {
+    if (!MASCOTTE_ACTIVEE) return
     const el = conteneurRef.current
     if (!el) return
 
@@ -81,6 +85,10 @@ export default function MascotCameo({
       }
     }
   }, [mode])
+
+  if (!MASCOTTE_ACTIVEE) {
+    return null
+  }
 
   return (
     <div className={`inline-flex items-center gap-3.5 ${className}`}>

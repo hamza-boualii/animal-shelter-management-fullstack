@@ -13,6 +13,7 @@ import RegisterPage from './pages/public/RegisterPage'
 import NotFoundPage from './pages/public/NotFoundPage'
 
 // Pages internes de gestion du personnel
+import PersonnelLayout from './components/layout/PersonnelLayout'
 import PersonnelDashboard from './pages/personnel/PersonnelDashboard'
 import GestionAnimauxPage from './pages/personnel/GestionAnimauxPage'
 import GestionDemandesPage from './pages/personnel/GestionDemandesPage'
@@ -39,50 +40,17 @@ export default function App() {
               path="personnel"
               element={
                 <ProtectedRoute>
-                  <PersonnelDashboard />
+                  <PersonnelLayout />
                 </ProtectedRoute>
               }
-            />
-            <Route
-              path="personnel/animaux"
-              element={
-                <ProtectedRoute>
-                  <GestionAnimauxPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="personnel/demandes"
-              element={
-                <ProtectedRoute>
-                  <GestionDemandesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="personnel/dossiers-medicaux"
-              element={
-                <ProtectedRoute>
-                  <DossiersMedicauxPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="personnel/dons"
-              element={
-                <ProtectedRoute>
-                  <GestionDonsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="personnel/equipe"
-              element={
-                <ProtectedRoute>
-                  <EquipePersonnelPage />
-                </ProtectedRoute>
-              }
-            />
+            >
+              <Route index element={<PersonnelDashboard />} />
+              <Route path="animaux" element={<GestionAnimauxPage />} />
+              <Route path="demandes" element={<GestionDemandesPage />} />
+              <Route path="dossiers-medicaux" element={<DossiersMedicauxPage />} />
+              <Route path="dons" element={<GestionDonsPage />} />
+              <Route path="equipe" element={<EquipePersonnelPage />} />
+            </Route>
 
             {/* Page 404 */}
             <Route path="*" element={<NotFoundPage />} />

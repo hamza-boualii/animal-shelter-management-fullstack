@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { animate, stagger } from 'animejs'
 import { useDons } from '../../hooks/useDons'
 import { useAuth } from '../../hooks/useAuth'
 import { TYPES_DON } from '../../utils/constantes'
 import { formaterDate } from '../../utils/dates'
-import PersonnelNav from '../../components/personnel/PersonnelNav'
 import Modal from '../../components/ui/Modal'
 import Bouton from '../../components/ui/Bouton'
 import Chargement from '../../components/ui/Chargement'
@@ -17,6 +17,8 @@ export default function GestionDonsPage() {
   const [donEnEdition, setDonEnEdition] = useState(null)
   const [chargementAction, setChargementAction] = useState(false)
   const [notification, setNotification] = useState(null)
+  const kpiRef = useRef(null)
+  const tableRef = useRef(null)
 
   const [form, setForm] = useState({
     personnelId: utilisateur?.id || 1,
@@ -28,6 +30,39 @@ export default function GestionDonsPage() {
     telephoneDonateur: '',
     photoUrl: '',
   })
+
+  useEffect(() => {
+    if (chargement) return
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) return
+
+    try {
+      const kpiItems = kpiRef.current ? Array.from(kpiRef.current.children) : []
+      if (kpiItems.length > 0) {
+        animate(kpiItems, {
+          opacity: [0, 1],
+          translateY: [14, 0],
+          duration: 350,
+          ease: 'outCubic',
+          delay: stagger(50),
+        })
+      }
+      if (tableRef.current) {
+        animate(tableRef.current, {
+          opacity: [0, 1],
+          translateY: [12, 0],
+          duration: 350,
+          ease: 'outCubic',
+          delay: 100,
+        })
+      }
+    } catch {
+      // Fallback
+    }
+  }, [chargement, dons.length])
 
   const ouvrirAjout = () => {
     setDonEnEdition(null)
@@ -109,114 +144,145 @@ export default function GestionDonsPage() {
     .reduce((acc, curr) => acc + Number(curr.valeur || 0), 0)
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <PersonnelNav />
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="space-y-8">
+      {/* EN-TÊTE OPÉRATIONNEL */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-brand-dark">Gestion des Dons &amp; Ressources</h2>
-          <p className="text-xs text-brand-dark/70">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+            Gestion des Dons &amp; Ressources
+          </h1>
+          <p className="text-xs sm:text-sm text-brand-dark/70 mt-1">
             Registre des contributions financières et matérielles reçues au sanctuaire
           </p>
         </div>
-        <Bouton variant="primary" size="md" onClick={ouvrirAjout}>
-          + Enregistrer un don
+        <Bouton variant="primary" size="md" onClick={ouvrirAjout} className="self-start sm:self-auto shadow-warm-md flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Enregistrer un don</span>
         </Bouton>
       </div>
 
       {notification && (
-        <div className="mb-6">
-          <Notification
-            type={notification.type}
-            message={notification.texte}
-            onFermer={() => setNotification(null)}
-          />
-        </div>
+        <Notification
+          type={notification.type}
+          message={notification.texte}
+          onFermer={() => setNotification(null)}
+        />
       )}
 
-      {erreur && (
-        <div className="mb-6">
-          <Notification type="erreur" message={erreur} />
-        </div>
-      )}
+      {erreur && <Notification type="erreur" message={erreur} />}
 
-      {/* Résumé des dons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-5 rounded-2xl border border-brand-burnt/15 shadow-sm">
-          <span className="text-xs font-bold text-brand-taupe uppercase">Total Financier Collecté</span>
-          <p className="text-2xl font-black text-emerald-800 mt-1">
-            {totalFinancier.toFixed(2)} DT
+      {/* SYNTHÈSE DES DONS (3 KPI Cards) */}
+      <section ref={kpiRef} className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="bg-white p-6 rounded-3xl border border-brand-burnt/15 shadow-[0_8px_24px_rgba(52,46,43,0.04)] hover:shadow-warm-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-brand-dark/70 uppercase tracking-wider">
+              Total Financier Collecté
+            </span>
+            <span className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+          </div>
+          <p className="text-3xl sm:text-4xl font-extrabold text-emerald-800 tracking-tight mt-4">
+            {totalFinancier.toFixed(2)} <span className="text-lg font-semibold text-emerald-700">DT</span>
           </p>
+          <p className="text-xs text-brand-dark/70 mt-2">Dédié aux soins et infrastructures</p>
         </div>
-        <div className="bg-white p-5 rounded-2xl border border-brand-burnt/15 shadow-sm">
-          <span className="text-xs font-bold text-brand-taupe uppercase">Dons en nature / matériel</span>
-          <p className="text-2xl font-black text-brand-orange mt-1">
-            {dons.filter((d) => d.typeDon === 'NATURE').length} dons
-          </p>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-brand-burnt/15 shadow-sm">
-          <span className="text-xs font-bold text-brand-taupe uppercase">Total Bienfaiteurs Référencés</span>
-          <p className="text-2xl font-black text-brand-dark mt-1">
-            {dons.length} enregistrements
-          </p>
-        </div>
-      </div>
 
+        <div className="bg-white p-6 rounded-3xl border border-brand-burnt/15 shadow-[0_8px_24px_rgba(52,46,43,0.04)] hover:shadow-warm-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-brand-dark/70 uppercase tracking-wider">
+              Dons en nature / matériel
+            </span>
+            <span className="p-2.5 rounded-2xl bg-[#FFF5EF] text-[#E87945]">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </span>
+          </div>
+          <p className="text-3xl sm:text-4xl font-extrabold text-[#E87945] tracking-tight mt-4">
+            {dons.filter((d) => d.typeDon === 'NATURE').length} <span className="text-lg font-semibold text-brand-dark/70">dons</span>
+          </p>
+          <p className="text-xs text-brand-dark/70 mt-2">Nourriture, litières &amp; couvertures</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-brand-burnt/15 shadow-[0_8px_24px_rgba(52,46,43,0.04)] hover:shadow-warm-md transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-brand-dark/70 uppercase tracking-wider">
+              Total Enregistrements
+            </span>
+            <span className="p-2.5 rounded-2xl bg-brand-surface text-brand-burnt">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </span>
+          </div>
+          <p className="text-3xl sm:text-4xl font-extrabold text-brand-dark tracking-tight mt-4">
+            {dons.length} <span className="text-lg font-semibold text-brand-dark/70">fiches</span>
+          </p>
+          <p className="text-xs text-brand-dark/70 mt-2">Communauté de bienfaiteurs</p>
+        </div>
+      </section>
+
+      {/* TABLE DU REGISTRE DES DONS */}
       {chargement ? (
         <Chargement message="Chargement du registre des dons..." />
       ) : dons.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-brand-stone text-center text-xs text-brand-taupe">
-          Aucun don enregistré pour le moment.
+        <div className="bg-white p-12 rounded-3xl border border-brand-burnt/15 text-center text-xs sm:text-sm text-brand-taupe space-y-2">
+          <p className="font-semibold">Aucun don enregistré pour le moment.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-brand-burnt/15 shadow-sm overflow-hidden">
+        <div ref={tableRef} className="bg-white rounded-3xl border border-brand-burnt/15 shadow-[0_8px_30px_rgba(52,46,43,0.04)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-brand-cream/80 border-b border-brand-stone text-brand-dark uppercase tracking-wider text-[11px] font-bold">
+              <thead className="bg-[#FFF8F5] border-b border-brand-stone/60 text-brand-dark uppercase tracking-wider text-[11px] font-bold">
                 <tr>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Type</th>
-                  <th className="py-3.5 px-4">Donateur</th>
-                  <th className="py-3.5 px-4">Valeur / Montant</th>
-                  <th className="py-3.5 px-4">Description</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-4 px-5">Date</th>
+                  <th className="py-4 px-5">Type de don</th>
+                  <th className="py-4 px-5">Donateur</th>
+                  <th className="py-4 px-5">Montant / Valeur</th>
+                  <th className="py-4 px-5">Description</th>
+                  <th className="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-stone/50">
+              <tbody className="divide-y divide-brand-stone/40">
                 {dons.map((don) => {
                   const typeInfo = TYPES_DON[don.typeDon] || TYPES_DON.ARGENT
                   return (
-                    <tr key={don.id} className="hover:bg-brand-surface/40 transition-colors">
-                      <td className="py-3.5 px-4 text-xs font-bold text-brand-dark">
+                    <tr key={don.id} className="hover:bg-brand-surface/30 transition-colors">
+                      <td className="py-4 px-5 text-xs font-bold text-brand-dark">
                         {formaterDate(don.dateDon || don.date)}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${typeInfo.badgeClass}`}>
+                      <td className="py-4 px-5">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${typeInfo.badgeClass}`}>
                           {typeInfo.label}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-5">
                         <div className="font-bold text-brand-dark">{don.nomDonateur || 'Anonyme'}</div>
                         <div className="text-[11px] text-brand-taupe">{don.telephoneDonateur || '-'}</div>
                       </td>
-                      <td className="py-3.5 px-4 font-extrabold text-brand-dark">
+                      <td className="py-4 px-5 font-extrabold text-brand-dark">
                         {don.valeur ? `${Number(don.valeur).toFixed(2)} DT` : '-'}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-brand-dark/75 max-w-xs truncate">
+                      <td className="py-4 px-5 text-xs text-brand-dark/80 max-w-xs truncate">
                         {don.description || '-'}
                       </td>
-                      <td className="py-3.5 px-4 text-right space-x-2">
+                      <td className="py-4 px-5 text-right space-x-2 shrink-0">
                         <button
                           type="button"
                           onClick={() => ouvrirEdition(don)}
-                          className="px-2.5 py-1 rounded-lg bg-brand-cream hover:bg-brand-burnt hover:text-white text-brand-dark border border-brand-burnt/20 text-xs font-bold transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-brand-surface hover:bg-brand-burnt hover:text-white text-brand-dark border border-brand-burnt/20 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                         >
                           Modifier
                         </button>
                         <button
                           type="button"
                           onClick={() => gererSuppression(don)}
-                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-700 hover:text-white text-rose-800 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-700 hover:text-white text-rose-800 border border-rose-200 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                         >
                           Supprimer
                         </button>
@@ -230,7 +296,7 @@ export default function GestionDonsPage() {
         </div>
       )}
 
-      {/* Modal Enregistrement / Modification Don */}
+      {/* MODAL ENREGISTREMENT DON */}
       <Modal
         ouvert={modalOuvert}
         onFermer={fermerModal}
@@ -247,7 +313,7 @@ export default function GestionDonsPage() {
                 name="typeDon"
                 value={form.typeDon}
                 onChange={changer}
-                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-sm"
+                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
               >
                 <option value="ARGENT">Financier (Espèces, Virement)</option>
                 <option value="NATURE">Nature (Croquettes, Médicaments, Litière)</option>
@@ -265,7 +331,7 @@ export default function GestionDonsPage() {
                 min="0"
                 value={form.valeur}
                 onChange={changer}
-                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
               />
             </div>
           </div>
@@ -281,7 +347,7 @@ export default function GestionDonsPage() {
                 value={form.nomDonateur}
                 onChange={changer}
                 placeholder="Ex : Ahmed Ben Ali ou Anonyme"
-                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
               />
             </div>
 
@@ -295,7 +361,7 @@ export default function GestionDonsPage() {
                 value={form.telephoneDonateur}
                 onChange={changer}
                 placeholder="98123456"
-                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+                className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
               />
             </div>
           </div>
@@ -310,7 +376,7 @@ export default function GestionDonsPage() {
               required
               value={form.date}
               onChange={changer}
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             />
           </div>
 
@@ -324,7 +390,7 @@ export default function GestionDonsPage() {
               value={form.description}
               onChange={changer}
               placeholder="Détail des articles remis, objectif du don..."
-              className="w-full p-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full p-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             ></textarea>
           </div>
 

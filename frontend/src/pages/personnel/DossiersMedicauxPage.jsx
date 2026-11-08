@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { animate, stagger } from 'animejs'
 import { useDossiersMedicaux } from '../../hooks/useDossiersMedicaux'
 import { useAnimaux } from '../../hooks/useAnimaux'
 import { useAuth } from '../../hooks/useAuth'
-import PersonnelNav from '../../components/personnel/PersonnelNav'
 import Modal from '../../components/ui/Modal'
 import Bouton from '../../components/ui/Bouton'
 import Chargement from '../../components/ui/Chargement'
@@ -17,6 +17,7 @@ export default function DossiersMedicauxPage() {
   const [dossierEnEdition, setDossierEnEdition] = useState(null)
   const [chargementAction, setChargementAction] = useState(false)
   const [notification, setNotification] = useState(null)
+  const gridRef = useRef(null)
 
   const [form, setForm] = useState({
     animalId: '',
@@ -28,6 +29,30 @@ export default function DossiersMedicauxPage() {
     description: '',
     photoUrls: '',
   })
+
+  useEffect(() => {
+    if (chargement) return
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) return
+
+    try {
+      const cards = gridRef.current ? Array.from(gridRef.current.children) : []
+      if (cards.length > 0) {
+        animate(cards, {
+          opacity: [0, 1],
+          translateY: [14, 0],
+          duration: 350,
+          ease: 'outCubic',
+          delay: stagger(50),
+        })
+      }
+    } catch {
+      // Fallback
+    }
+  }, [chargement, dossiers.length])
 
   const ouvrirAjout = () => {
     setDossierEnEdition(null)
@@ -103,7 +128,7 @@ export default function DossiersMedicauxPage() {
   }
 
   const gererSuppression = async (dossier) => {
-    if (!window.confirm(`Confirmez-vous la suppression de ce dossier médical ?`)) {
+    if (!window.confirm('Confirmez-vous la suppression de ce dossier médical ?')) {
       return
     }
     try {
@@ -115,109 +140,133 @@ export default function DossiersMedicauxPage() {
   }
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <PersonnelNav />
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-2xl font-extrabold text-brand-dark">Dossiers Médicaux &amp; Carnets Vétérinaires</h2>
-          <p className="text-xs text-brand-dark/70">
-            Suivi des vaccinations, stérilisations, allergies et traitements en cours des résidents
-          </p>
+    <div className="space-y-8">
+      {/* EN-TÊTE OPÉRATIONNEL */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <span className="w-11 h-11 rounded-2xl bg-brand-surface text-brand-burnt flex items-center justify-center shrink-0 shadow-sm border border-brand-burnt/10">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-3-3v6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </span>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+              Dossiers Médicaux &amp; Carnets Vétérinaires
+            </h1>
+            <p className="text-xs sm:text-sm text-brand-dark/70 mt-1">
+              Suivi des vaccinations, stérilisations, allergies et protocoles de soin des résidents
+            </p>
+          </div>
         </div>
-        <Bouton variant="primary" size="md" onClick={ouvrirAjout}>
-          + Créer un dossier médical
+        <Bouton variant="primary" size="md" onClick={ouvrirAjout} className="self-start sm:self-auto shadow-warm-md flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Créer un dossier médical</span>
         </Bouton>
       </div>
 
       {notification && (
-        <div className="mb-6">
-          <Notification
-            type={notification.type}
-            message={notification.texte}
-            onFermer={() => setNotification(null)}
-          />
-        </div>
+        <Notification
+          type={notification.type}
+          message={notification.texte}
+          onFermer={() => setNotification(null)}
+        />
       )}
 
-      {erreur && (
-        <div className="mb-6">
-          <Notification type="erreur" message={erreur} />
-        </div>
-      )}
+      {erreur && <Notification type="erreur" message={erreur} />}
 
+      {/* GRILLE DES DOSSIERS MÉDICAUX */}
       {chargement ? (
         <Chargement message="Chargement des carnets de santé..." />
       ) : dossiers.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-brand-stone text-center text-xs text-brand-taupe">
-          Aucun dossier médical enregistré pour le moment.
+        <div className="bg-white p-12 rounded-3xl border border-brand-burnt/15 text-center text-xs sm:text-sm text-brand-taupe space-y-2">
+          <p className="font-semibold">Aucun carnet médical enregistré pour le moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {dossiers.map((d) => {
             const animal = tousLesAnimaux.find((a) => a.id === d.animalId)
             return (
               <div
                 key={d.id}
-                className="bg-white p-6 rounded-3xl border border-brand-burnt/15 shadow-sm space-y-4 hover:shadow-warm-md transition-shadow"
+                className="bg-white p-6 sm:p-7 rounded-3xl border border-brand-burnt/15 shadow-[0_8px_24px_rgba(52,46,43,0.04)] hover:shadow-warm-md transition-all flex flex-col justify-between gap-5 relative overflow-hidden"
               >
-                <div className="flex items-center justify-between border-b border-brand-stone/60 pb-3">
-                  <div>
-                    <h3 className="font-extrabold text-base text-brand-dark">
-                      {animal ? animal.nom : `Animal #${d.animalId}`}
-                    </h3>
-                    <p className="text-xs text-brand-orange font-semibold">
-                      {animal?.espece || 'Espèce'} • {animal?.race || 'Race croisée'}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                      d.sterilise
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                        : 'bg-amber-100 text-amber-800 border-amber-200'
-                    }`}
-                  >
-                    {d.sterilise ? '✓ Stérilisé(e)' : 'Non stérilisé(e)'}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-xs text-brand-dark/80">
-                  <p>
-                    <strong className="text-brand-dark">Vaccinations : </strong>
-                    {d.vaccinsRecus || 'Non renseigné'}
-                  </p>
-                  <p>
-                    <strong className="text-brand-dark">Allergies connues : </strong>
-                    {d.allergies || 'Aucune connue'}
-                  </p>
-                  {d.traitementsEnCours && (
-                    <p>
-                      <strong className="text-brand-dark">Traitements en cours : </strong>
-                      <span className="text-blue-800 font-medium">{d.traitementsEnCours}</span>
-                    </p>
-                  )}
-                  {d.description && (
-                    <div className="pt-2 border-t border-brand-stone/40">
-                      <span className="font-bold text-brand-dark block mb-1">Observations vétérinaires :</span>
-                      <p className="italic text-brand-dark/75 bg-brand-cream/30 p-2.5 rounded-xl">
-                        « {d.description} »
-                      </p>
+                <div className="space-y-4">
+                  {/* Titre et statut de stérilisation */}
+                  <div className="flex items-start justify-between gap-3 border-b border-brand-stone/50 pb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center shrink-0 border border-sky-100">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-3-3v6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </span>
+                      <div>
+                        <h2 className="font-extrabold text-base sm:text-lg text-brand-dark tracking-tight">
+                          {animal ? animal.nom : `Animal #${d.animalId}`}
+                        </h2>
+                        <p className="text-xs text-brand-burnt font-semibold">
+                          {animal?.espece || 'Espèce'} • {animal?.race || 'Race croisée'}
+                        </p>
+                      </div>
                     </div>
-                  )}
+
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${
+                        d.sterilise
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {d.sterilise ? '✓ Stérilisé(e)' : 'Non stérilisé(e)'}
+                    </span>
+                  </div>
+
+                  {/* Détails cliniques */}
+                  <div className="space-y-2.5 text-xs sm:text-sm text-brand-dark/85">
+                    <div className="flex items-start gap-2">
+                      <strong className="text-brand-dark min-w-[130px] shrink-0 font-bold">Vaccinations :</strong>
+                      <span className="text-brand-dark/80">{d.vaccinsRecus || 'Non renseigné'}</span>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <strong className="text-brand-dark min-w-[130px] shrink-0 font-bold">Allergies :</strong>
+                      <span className={d.allergies ? 'text-amber-800 font-semibold' : 'text-brand-dark/70'}>
+                        {d.allergies || 'Aucune constatée'}
+                      </span>
+                    </div>
+
+                    {d.traitementsEnCours && (
+                      <div className="flex items-start gap-2 bg-blue-50/70 p-2.5 rounded-xl border border-blue-100">
+                        <strong className="text-blue-900 min-w-[130px] shrink-0 font-bold">Traitements actifs :</strong>
+                        <span className="text-blue-900 font-semibold">{d.traitementsEnCours}</span>
+                      </div>
+                    )}
+
+                    {d.description && (
+                      <div className="pt-2 border-t border-brand-stone/40">
+                        <span className="font-bold text-brand-dark text-xs block mb-1">Observations vétérinaires :</span>
+                        <p className="italic text-brand-dark/80 bg-[#FFF8F5] p-3 rounded-xl border border-brand-stone/50 leading-relaxed text-xs">
+                          « {d.description} »
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-brand-stone/50">
+                {/* Actions */}
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-brand-stone/40">
                   <button
                     type="button"
                     onClick={() => ouvrirEdition(d)}
-                    className="px-3 py-1.5 rounded-xl bg-brand-cream hover:bg-brand-burnt hover:text-white text-brand-dark border border-brand-burnt/20 text-xs font-bold transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-brand-surface hover:bg-brand-burnt hover:text-white text-brand-dark border border-brand-burnt/20 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                   >
                     Modifier
                   </button>
                   <button
                     type="button"
                     onClick={() => gererSuppression(d)}
-                    className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-700 hover:text-white text-rose-800 border border-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-700 hover:text-white text-rose-800 border border-rose-200 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                   >
                     Supprimer
                   </button>
@@ -228,11 +277,11 @@ export default function DossiersMedicauxPage() {
         </div>
       )}
 
-      {/* Modal Dossier Médical */}
+      {/* MODAL FORMULAIRE DOSSIER MÉDICAL */}
       <Modal
         ouvert={modalOuvert}
         onFermer={fermerModal}
-        titre={dossierEnEdition ? 'Modifier le dossier médical' : 'Nouveau carnet vétérinaire'}
+        titre={dossierEnEdition ? 'Modifier le carnet vétérinaire' : 'Nouveau carnet vétérinaire'}
         taille="md"
       >
         <form onSubmit={gererSoumission} className="space-y-4">
@@ -246,7 +295,7 @@ export default function DossiersMedicauxPage() {
               disabled={Boolean(dossierEnEdition)}
               value={form.animalId}
               onChange={changer}
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-sm"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             >
               <option value="">Sélectionner un animal...</option>
               {tousLesAnimaux.map((a) => (
@@ -257,7 +306,7 @@ export default function DossiersMedicauxPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-brand-surface rounded-xl border border-brand-burnt/15">
+          <div className="flex items-center gap-3 p-3.5 bg-[#FFF8F5] rounded-xl border border-brand-burnt/15">
             <input
               id="sterilise"
               name="sterilise"
@@ -266,7 +315,7 @@ export default function DossiersMedicauxPage() {
               onChange={changer}
               className="w-4 h-4 rounded text-brand-burnt focus:ring-brand-burnt cursor-pointer"
             />
-            <label htmlFor="sterilise" className="text-xs font-bold text-brand-dark cursor-pointer">
+            <label htmlFor="sterilise" className="text-xs sm:text-sm font-bold text-brand-dark cursor-pointer select-none">
               L’animal est stérilisé / castré
             </label>
           </div>
@@ -281,7 +330,7 @@ export default function DossiersMedicauxPage() {
               value={form.vaccinsRecus}
               onChange={changer}
               placeholder="Ex : Rage, RCP, Leucose..."
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             />
           </div>
 
@@ -295,7 +344,7 @@ export default function DossiersMedicauxPage() {
               value={form.allergies}
               onChange={changer}
               placeholder="Ex : Pénicilline, céréales ou Aucune"
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             />
           </div>
 
@@ -309,7 +358,7 @@ export default function DossiersMedicauxPage() {
               value={form.traitementsEnCours}
               onChange={changer}
               placeholder="Ex : Antibiotiques 5j, collyre ou Aucun"
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             />
           </div>
 
@@ -323,7 +372,7 @@ export default function DossiersMedicauxPage() {
               value={form.description}
               onChange={changer}
               placeholder="Examen général, état du pelage, bilan comportemental..."
-              className="w-full p-3.5 rounded-xl border border-brand-stone text-sm"
+              className="w-full p-3.5 rounded-xl border border-brand-stone text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
             ></textarea>
           </div>
 

@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { animate, stagger } from 'animejs'
 import Bouton from '../ui/Bouton'
-import MascotCameo from '../ui/MascotCameo'
 
 export default function HeroSection({ totalAnimaux = 0 }) {
   const sectionRef = useRef(null)
@@ -167,7 +166,7 @@ export default function HeroSection({ totalAnimaux = 0 }) {
             </div>
           </div>
 
-          {/* Colonne droite : Photographie haute fidélité & Mascotte Scout */}
+          {/* Colonne droite : Photographie principale du sanctuaire */}
           <div className="lg:col-span-5 relative">
             <div className="absolute -top-6 -right-6 w-80 h-80 bg-brand-peach/30 rounded-full blur-3xl -z-10"></div>
             
@@ -176,23 +175,9 @@ export default function HeroSection({ totalAnimaux = 0 }) {
               className="relative mx-auto rounded-[2.5rem] overflow-hidden border-8 border-white shadow-2xl bg-brand-surface aspect-[4/5] max-w-md lg:max-w-none group"
             >
               <img
-                src="/images/animals/golden-retriever.png"
-                alt="Chien Golden Retriever en attente d'adoption à Rafiq"
+                src="/images/homepage-hero.jpg"
+                alt="Compagnon en attente d'adoption au sanctuaire Rafiq"
                 className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute top-4 left-4 bg-brand-dark/85 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span>Sanctuaire Actif &amp; Ouvert</span>
-              </div>
-            </div>
-
-            {/* Badge flottant mascotte Scout avec Anime.js */}
-            <div className="absolute -bottom-6 -left-4 sm:-left-8 z-20">
-              <MascotCameo
-                mode="bounce"
-                taille={56}
-                titreBulle="Rafiq Scout"
-                bulle="Prêt à rencontrer votre nouveau meilleur ami ?"
               />
             </div>
           </div>
