@@ -9,14 +9,25 @@ import MascotCameo from '../../components/ui/MascotCameo'
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { connecter, chargement, erreur, reinitialiserErreur } = useAuth()
+  const { utilisateur, connecter, chargement, erreur, reinitialiserErreur } = useAuth()
 
-  // Type de compte : 'ADOPTANT' (défaut) ou 'PERSONNEL'
-  const [typeCompte, setTypeCompte] = useState(ROLES.ADOPTANT)
+  const estRedirectionPersonnel = Boolean(
+    location.state?.redirection?.startsWith('/personnel')
+  )
+
+  // Type de compte : 'PERSONNEL' si redirection vers /personnel, sinon 'ADOPTANT' (défaut)
+  const [typeCompte, setTypeCompte] = useState(() =>
+    estRedirectionPersonnel ? ROLES.PERSONNEL : ROLES.ADOPTANT
+  )
   const [identifiant, setIdentifiant] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
 
-  const redirection = location.state?.redirection || (typeCompte === ROLES.PERSONNEL ? '/personnel' : '/animaux')
+  const redirection =
+    typeCompte === ROLES.PERSONNEL
+      ? location.state?.redirection || '/personnel'
+      : location.state?.redirection && !location.state.redirection.startsWith('/personnel')
+        ? location.state.redirection
+        : '/animaux'
 
   const changerTypeCompte = (nouveauType) => {
     setTypeCompte(nouveauType)
@@ -120,9 +131,18 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={gererSoumission} className="space-y-4">
+              {utilisateur?.role === ROLES.ADOPTANT && typeCompte === ROLES.PERSONNEL && (
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
+                  <p className="font-semibold">Session adoptant active ({utilisateur.nom})</p>
+                  <p className="mt-0.5">
+                    Connectez-vous ci-dessous pour basculer vers votre compte du personnel du refuge.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-1.5">
-                  {typeCompte === ROLES.PERSONNEL ? 'Nom d’utilisateur' : 'Adresse Email'}
+                  {typeCompte === ROLES.PERSONNEL ? 'Nom d’utilisateur ou Email' : 'Adresse Email'}
                 </label>
                 <input
                   type={typeCompte === ROLES.PERSONNEL ? 'text' : 'email'}
@@ -130,7 +150,7 @@ export default function LoginPage() {
                   value={identifiant}
                   onChange={(e) => setIdentifiant(e.target.value)}
                   placeholder={
-                    typeCompte === ROLES.PERSONNEL ? 'Ex : admin ou soignant' : 'votre.email@exemple.com'
+                    typeCompte === ROLES.PERSONNEL ? 'Ex : admin ou admin@shelter.tn' : 'votre.email@exemple.com'
                   }
                   className="w-full h-12 px-4 rounded-xl border border-brand-stone bg-white focus:outline-none focus:border-brand-burnt focus:ring-2 focus:ring-brand-burnt/20 text-sm"
                 />
@@ -154,7 +174,7 @@ export default function LoginPage() {
                 <div className="p-3 bg-brand-cream/80 rounded-xl border border-brand-burnt/15 text-xs text-brand-dark/80">
                   <p className="font-semibold text-brand-burnt">Note d'accès interne :</p>
                   <p className="mt-0.5">
-                    Les comptes membres de l’équipe de refuge sont provisionnés en interne. Utilisez vos identifiants fournis (ex : <code>admin</code> / <code>personnel123</code>).
+                    Les comptes membres de l’équipe de refuge sont provisionnés en interne. Utilisez votre nom d'utilisateur ou email (ex : <code>admin</code> ou <code>admin@shelter.tn</code> / <code>personnel123</code>).
                   </p>
                 </div>
               )}

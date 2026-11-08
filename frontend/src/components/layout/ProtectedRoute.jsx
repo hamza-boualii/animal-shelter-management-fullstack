@@ -6,12 +6,8 @@ export default function ProtectedRoute({ children, roleRequis = ROLES.PERSONNEL 
   const { utilisateur, estConnecte } = useAuth()
   const location = useLocation()
 
-  if (!estConnecte) {
+  if (!estConnecte || (roleRequis && utilisateur?.role !== roleRequis)) {
     return <Navigate to="/login" state={{ redirection: location.pathname }} replace />
-  }
-
-  if (roleRequis && utilisateur?.role !== roleRequis) {
-    return <Navigate to="/" replace />
   }
 
   return children
