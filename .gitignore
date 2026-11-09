@@ -7,6 +7,9 @@
 **/target/
 *.class
 
+# The only SQL source is /database/database.sql at the project root
+backend/src/main/resources/database.sql
+
 # Node.js
 node_modules/
 dist/
@@ -18,3 +21,7 @@ dist/
 # Operating system
 .DS_Store
 Thumbs.db
+
+# Local assets and agent files
+assets/
+.agent/
