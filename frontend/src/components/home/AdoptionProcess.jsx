@@ -126,7 +126,6 @@ export default function AdoptionProcess() {
         {/* En-tête de section avec mascotte */}
         <div ref={headerRef} className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-burnt/10 border border-brand-burnt/20 text-brand-burnt text-xs font-bold tracking-wider uppercase mb-3">
-            <span>🐾</span>
             Transparence &amp; Bienveillance
           </div>
 

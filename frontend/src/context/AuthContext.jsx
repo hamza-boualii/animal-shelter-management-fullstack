@@ -31,15 +31,29 @@ export function AuthProvider({ children }) {
     }
   }, [utilisateur])
 
-  const connecter = useCallback(async (identifiant, motDePasse, typeCompte = ROLES.ADOPTANT) => {
+  const connecter = useCallback(async (identifiant, motDePasse, typeCompte) => {
     setChargement(true)
     setErreur(null)
     try {
       let reponse
       if (typeCompte === ROLES.PERSONNEL) {
         reponse = await authApi.connecterPersonnel(identifiant, motDePasse)
-      } else {
+      } else if (typeCompte === ROLES.ADOPTANT) {
         reponse = await authApi.connecterAdoptant(identifiant, motDePasse)
+      } else {
+        const tentatives = identifiant.includes('@')
+          ? [authApi.connecterAdoptant, authApi.connecterPersonnel]
+          : [authApi.connecterPersonnel, authApi.connecterAdoptant]
+
+        try {
+          reponse = await tentatives[0](identifiant, motDePasse)
+        } catch (erreurPrincipale) {
+          try {
+            reponse = await tentatives[1](identifiant, motDePasse)
+          } catch {
+            throw erreurPrincipale
+          }
+        }
       }
 
       setUtilisateur(reponse)
