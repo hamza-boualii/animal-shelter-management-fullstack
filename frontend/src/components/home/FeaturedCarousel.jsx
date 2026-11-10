@@ -129,7 +129,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="max-w-xl">
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-surface border border-brand-burnt/20 text-brand-burnt text-xs font-bold tracking-wider uppercase mb-2">
-                🐾 Compagnons en vedette
+                Compagnons en vedette
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-dark tracking-tight">
                 Ils attendent un{' '}
@@ -257,7 +257,6 @@ export default function FeaturedCarousel({ animaux = [] }) {
           <Link to="/animaux">
             <Bouton variant="primary" size="md">
               <span>Explorer tous les animaux du sanctuaire</span>
-              <span className="ml-2">🐾</span>
             </Bouton>
           </Link>
           <MascotCameo
