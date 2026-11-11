@@ -85,6 +85,8 @@ export default function AnimalDetailPage() {
     DEFAULT_ANIMAL_IMAGES[animal.espece] ||
     '/images/animals/golden-retriever.png'
 
+  const estEligibleAdoption = animal.statut === 'DISPONIBLE' || animal.statut === 'EN_ATTENTE_ADOPTION'
+
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
       {/* Fil d'Ariane */}
@@ -234,7 +236,7 @@ export default function AnimalDetailPage() {
 
             {/* Bloc d'action d'adoption */}
             <div className="border-t border-brand-stone/60 pt-5">
-              {animal.statut === 'DISPONIBLE' ? (
+              {estEligibleAdoption ? (
                 estAdoptant ? (
                   <Link to={`/adopter/${animal.id}`} className="block">
                     <Bouton variant="primary" size="lg" className="w-full">
@@ -286,7 +288,7 @@ export default function AnimalDetailPage() {
                     Cet animal est actuellement {statutInfo.label.toLowerCase()} ({statutInfo.description}).
                   </p>
                   <p className="text-[11px] text-stone-500 mt-1">
-                    Les demandes d’adoption ne sont ouvertes que pour les animaux avec le statut « Disponible ».
+                    Les demandes d’adoption ne sont ouvertes que pour les animaux disponibles ou en attente d’adoption.
                   </p>
                 </div>
               )}

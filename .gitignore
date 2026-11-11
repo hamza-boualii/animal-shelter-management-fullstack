@@ -25,3 +25,6 @@ Thumbs.db
 # Local assets and agent files
 assets/
 .agent/
+
+# Runtime logs
+logs/
