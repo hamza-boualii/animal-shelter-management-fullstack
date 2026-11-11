@@ -54,8 +54,8 @@ public class DemandeAdoptionService {
             throw new ResourceNotFoundException("Adoptant introuvable : " + request.getAdoptantId());
         }
 
-        if (animal.getStatut() != StatutAnimal.DISPONIBLE) {
-            throw new IllegalArgumentException("Cet animal n'est pas disponible pour l'adoption.");
+        if (animal.getStatut() != StatutAnimal.DISPONIBLE && animal.getStatut() != StatutAnimal.EN_ATTENTE_ADOPTION) {
+            throw new IllegalArgumentException("Cet animal n'est pas éligible à l'adoption.");
         }
 
         DemandeAdoption demande = new DemandeAdoption();
@@ -66,9 +66,6 @@ public class DemandeAdoptionService {
         demande.setMotif(request.getMotif());
 
         demandeDAO.create(demande);
-
-        animal.setStatut(StatutAnimal.EN_ATTENTE_ADOPTION);
-        animalDAO.update(animal);
 
         return DemandeAdoptionResponse.from(demande);
     }

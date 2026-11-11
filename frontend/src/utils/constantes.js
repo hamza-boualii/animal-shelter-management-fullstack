@@ -16,22 +16,22 @@ export const SEXES = {
 export const STATUTS_ANIMAL = {
   DISPONIBLE: {
     label: 'Disponible',
-    badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    badgeClass: 'bg-[#DEF7EC] text-[#03543F] border-[#DEF7EC]',
     description: 'Prêt à être adopté immédiatement',
   },
   EN_ATTENTE_ADOPTION: {
     label: 'En attente',
-    badgeClass: 'bg-amber-100 text-amber-800 border-amber-200',
+    badgeClass: 'bg-[#F7EDE2] text-[#9E4211] border-[#F7EDE2]',
     description: 'Une demande est en cours d’évaluation',
   },
   EN_SOIN: {
     label: 'En soins',
-    badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
+    badgeClass: 'bg-[#E1EFFE] text-[#1E429F] border-[#E1EFFE]',
     description: 'Actuellement pris en charge par l’équipe de soins',
   },
   ADOPTE: {
     label: 'Adopté',
-    badgeClass: 'bg-stone-200 text-stone-700 border-stone-300',
+    badgeClass: 'bg-[#F3F4F6] text-[#4B5563] border-[#F3F4F6]',
     description: 'A trouvé son foyer pour la vie',
   },
 }

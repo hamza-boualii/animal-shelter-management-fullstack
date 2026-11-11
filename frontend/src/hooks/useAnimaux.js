@@ -54,7 +54,13 @@ export function useAnimaux(filtres = {}) {
     await recharger()
   }
 
-  // Filtrage côté client si des filtres sont passés
+  const ORDRE_STATUTS = {
+    DISPONIBLE: 1,
+    EN_ATTENTE_ADOPTION: 2,
+    EN_SOIN: 3,
+    ADOPTE: 4,
+  }
+
   const animauxFiltres = animaux.filter((animal) => {
     if (filtres.espece && filtres.espece !== 'TOUS' && animal.espece !== filtres.espece) {
       return false
@@ -74,8 +80,17 @@ export function useAnimaux(filtres = {}) {
     return true
   })
 
+  const animauxTries = [...animauxFiltres].sort((a, b) => {
+    const ordreA = ORDRE_STATUTS[a.statut] ?? 99
+    const ordreB = ORDRE_STATUTS[b.statut] ?? 99
+    if (ordreA !== ordreB) {
+      return ordreA - ordreB
+    }
+    return a.id - b.id
+  })
+
   return {
-    animaux: animauxFiltres,
+    animaux: animauxTries,
     tousLesAnimaux: animaux,
     chargement,
     erreur,

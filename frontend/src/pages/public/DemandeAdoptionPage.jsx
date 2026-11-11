@@ -69,8 +69,35 @@ export default function DemandeAdoptionPage() {
     )
   }
 
+  const estEligible = animal && (animal.statut === 'DISPONIBLE' || animal.statut === 'EN_ATTENTE_ADOPTION')
+
+  if (!estEligible) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-4">
+        <div className="bg-white p-8 rounded-3xl border border-brand-burnt/20 shadow-warm-md text-center space-y-4">
+          <MascotCameo mode="sit" taille={64} className="justify-center mb-2" />
+          <h2 className="text-2xl font-bold text-brand-dark">Adoption non disponible</h2>
+          <p className="text-sm text-brand-dark/75 leading-relaxed">
+            {animal?.nom || 'Cet animal'} n’est pas éligible à l’adoption actuellement. Les demandes d’adoption ne sont ouvertes que pour les animaux avec le statut « Disponible » ou « En attente ».
+          </p>
+          <div className="pt-4 flex justify-center">
+            <Link to="/animaux">
+              <Bouton variant="primary" size="md">
+                Retour aux animaux
+              </Bouton>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const gererSoumission = async (e) => {
     e.preventDefault()
+    if (!estEligible) {
+      setErreur("Cet animal n'est pas éligible à l'adoption.")
+      return
+    }
     if (!motif.trim()) {
       setErreur('Veuillez préciser votre motivation et votre cadre de vie.')
       return
