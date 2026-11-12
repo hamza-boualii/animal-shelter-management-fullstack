@@ -3,6 +3,7 @@ import { animate } from 'animejs'
 import { useAnimaux } from '../../hooks/useAnimaux'
 import { STATUTS_ANIMAL, ESPECES } from '../../utils/constantes'
 import { formaterDate } from '../../utils/dates'
+import { formaterPoids } from '../../utils/nombres'
 import AnimalForm from '../../components/animals/AnimalForm'
 import Modal from '../../components/ui/Modal'
 import Bouton from '../../components/ui/Bouton'
@@ -178,6 +179,7 @@ export default function GestionAnimauxPage() {
                   <th className="py-4 px-5">Nom &amp; Espèce</th>
                   <th className="py-4 px-5">Race</th>
                   <th className="py-4 px-5">Âge &amp; Sexe</th>
+                  <th className="py-4 px-5">Poids</th>
                   <th className="py-4 px-5">Statut</th>
                   <th className="py-4 px-5">Date d'arrivée</th>
                   <th className="py-4 px-5 text-right">Actions</th>
@@ -204,6 +206,9 @@ export default function GestionAnimauxPage() {
                       </td>
                       <td className="py-4 px-5 text-brand-dark/80">
                         {animal.age} an{animal.age > 1 ? 's' : ''} • {animal.sexe}
+                      </td>
+                      <td className="py-4 px-5 text-brand-dark/80 font-semibold">
+                        {formaterPoids(animal.poids)}
                       </td>
                       <td className="py-4 px-5">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${statutInfo.badgeClass}`}>
