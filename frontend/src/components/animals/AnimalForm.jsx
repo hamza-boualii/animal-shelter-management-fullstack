@@ -13,6 +13,7 @@ export default function AnimalForm({ animalInitial = null, onEnregistrer, onAnnu
     race: animalInitial?.race || '',
     sexe: animalInitial?.sexe || 'MALE',
     age: animalInitial?.age ?? 1,
+    poids: animalInitial?.poids ?? '',
     description: animalInitial?.description || '',
     photoUrl: animalInitial?.photoUrl || '',
     statut: animalInitial?.statut || 'DISPONIBLE',
@@ -30,6 +31,7 @@ export default function AnimalForm({ animalInitial = null, onEnregistrer, onAnnu
       ...form,
       personnelId: Number(form.personnelId),
       age: Number(form.age),
+      poids: form.poids === '' ? null : Number(form.poids),
     })
   }
 
@@ -120,7 +122,29 @@ export default function AnimalForm({ animalInitial = null, onEnregistrer, onAnnu
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-1">
+            Poids (kg) <span className="text-brand-burnt">*</span>
+          </label>
+          <input
+            name="poids"
+            type="number"
+            min="0.01"
+            max="9999.99"
+            step="0.01"
+            inputMode="decimal"
+            required
+            value={form.poids}
+            onChange={changer}
+            placeholder="Ex : 4.20"
+            className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white focus:outline-none focus:border-brand-burnt focus:ring-2 focus:ring-brand-burnt/20 text-sm"
+          />
+          <p className="text-[11px] text-brand-taupe mt-1">
+            En kilogrammes, strictement supérieur à 0 et deux décimales maximum.
+          </p>
+        </div>
+
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-brand-dark mb-1">
             Statut au refuge <span className="text-brand-burnt">*</span>

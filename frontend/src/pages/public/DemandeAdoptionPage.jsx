@@ -4,6 +4,7 @@ import { animauxApi } from '../../api/animauxApi'
 import { useDemandes } from '../../hooks/useDemandes'
 import { useAuth } from '../../hooks/useAuth'
 import { DEFAULT_ANIMAL_IMAGES, ESPECES } from '../../utils/constantes'
+import { formaterPoids } from '../../utils/nombres'
 import Bouton from '../../components/ui/Bouton'
 import Chargement from '../../components/ui/Chargement'
 import Notification from '../../components/ui/Notification'
@@ -197,7 +198,7 @@ export default function DemandeAdoptionPage() {
             <span>{especeInfo.icone}</span>
           </div>
           <p className="text-xs text-brand-orange font-semibold">
-            {especeInfo.label} • {animal?.race || 'Race croisée'} • {animal?.age} an{animal?.age > 1 ? 's' : ''}
+            {especeInfo.label} • {animal?.race || 'Race croisée'} • {animal?.age} an{animal?.age > 1 ? 's' : ''} • {formaterPoids(animal?.poids)}
           </p>
           <p className="text-xs text-brand-taupe mt-1 line-clamp-1">{animal?.description}</p>
         </div>
