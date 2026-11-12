@@ -1,5 +1,6 @@
 package tn.enicarthage.shelter.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +83,12 @@ public class AnimalService {
         ValidationUtil.requireNotNull(request.getEspece(), "L'espece est obligatoire.");
         ValidationUtil.requireNotNull(request.getSexe(), "Le sexe est obligatoire.");
         ValidationUtil.requireNonNegative(request.getAge(), "L'age doit etre positif ou nul.");
+        ValidationUtil.requireNotNull(request.getPoids(), "Le poids est obligatoire.");
+        ValidationUtil.requirePositive(request.getPoids(), "Le poids doit etre strictement positif.");
+        ValidationUtil.requireMaxScale(request.getPoids(), 2,
+                "Le poids ne peut pas depasser deux decimales.");
+        ValidationUtil.requireAtMost(request.getPoids(), new BigDecimal("9999.99"),
+                "Le poids depasse la capacite maximale autorisee.");
     }
 
     private void verifierPersonnel(int personnelId) {
@@ -98,6 +105,7 @@ public class AnimalService {
         animal.setRace(request.getRace());
         animal.setSexe(request.getSexe());
         animal.setAge(request.getAge());
+        animal.setPoids(request.getPoids());
         animal.setDescription(request.getDescription());
         animal.setPhotoUrl(request.getPhotoUrl());
         return animal;

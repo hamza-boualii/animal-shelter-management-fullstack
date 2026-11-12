@@ -32,6 +32,7 @@ CREATE TABLE animal (
     race VARCHAR(100),
     sexe ENUM('MALE', 'FEMELLE') NOT NULL,
     age INT NOT NULL DEFAULT 0,
+    poids DECIMAL(6,2) NOT NULL,
     description TEXT,
     photo_url VARCHAR(255),
     statut ENUM('DISPONIBLE', 'ADOPTE', 'EN_ATTENTE_ADOPTION', 'EN_SOIN') NOT NULL DEFAULT 'DISPONIBLE',
@@ -100,12 +101,12 @@ INSERT INTO adoptant (nom, prenom, email, mot_de_passe, telephone) VALUES
 ('Ben Ali', 'Amine', 'amine.benali@mail.tn', 'adoptant123', '98123456'),
 ('Trabelsi', 'Sarra', 'sarra.trabelsi@mail.tn', 'adoptant123', '97456789');
 
-INSERT INTO animal (personnel_id, nom, espece, race, sexe, age, description, photo_url, statut, date_arrivee) VALUES
-(1, 'Rex', 'CHIEN', 'Berger allemand', 'MALE', 3, 'Chien calme et obeissant, habitue aux enfants.', NULL, 'EN_ATTENTE_ADOPTION', '2026-09-10'),
-(2, 'Minou', 'CHAT', 'Siamois', 'FEMELLE', 2, 'Chatte sociable et propre.', NULL, 'DISPONIBLE', '2026-09-15'),
-(1, 'Bella', 'CHIEN', 'Labrador', 'FEMELLE', 4, 'Chienne affectueuse, en cours de soins.', NULL, 'EN_SOIN', '2026-10-01'),
-(2, 'Luna', 'CHAT', 'Europeen', 'FEMELLE', 1, 'Jeune chatte joueuse.', NULL, 'ADOPTE', '2026-10-20'),
-(1, 'Max', 'CHIEN', 'Husky', 'MALE', 5, 'Chien energique, a besoin d\'espace.', NULL, 'DISPONIBLE', '2026-08-05');
+INSERT INTO animal (personnel_id, nom, espece, race, sexe, age, poids, description, photo_url, statut, date_arrivee) VALUES
+(1, 'Rex', 'CHIEN', 'Berger allemand', 'MALE', 3, 32.50, 'Chien calme et obeissant, habitue aux enfants.', NULL, 'EN_ATTENTE_ADOPTION', '2026-09-10'),
+(2, 'Minou', 'CHAT', 'Siamois', 'FEMELLE', 2, 4.20, 'Chatte sociable et propre.', NULL, 'DISPONIBLE', '2026-09-15'),
+(1, 'Bella', 'CHIEN', 'Labrador', 'FEMELLE', 4, 28.00, 'Chienne affectueuse, en cours de soins.', NULL, 'EN_SOIN', '2026-10-01'),
+(2, 'Luna', 'CHAT', 'Europeen', 'FEMELLE', 1, 3.75, 'Jeune chatte joueuse.', NULL, 'ADOPTE', '2026-10-20'),
+(1, 'Max', 'CHIEN', 'Husky', 'MALE', 5, 24.50, 'Chien energique, a besoin d\'espace.', NULL, 'DISPONIBLE', '2026-08-05');
 
 INSERT INTO demande_adoption (animal_id, adoptant_id, date_demande, statut, motif) VALUES
 (1, 1, '2026-10-25', 'EN_ATTENTE', 'Je dispose d\'un jardin et je souhaite adopter un chien.'),

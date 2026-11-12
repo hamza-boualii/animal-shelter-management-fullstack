@@ -18,9 +18,9 @@ import tn.enicarthage.shelter.model.StatutAnimal;
 public class AnimalDAO {
 
     public void create(Animal animal) {
-        String sql = "INSERT INTO animal (personnel_id, nom, espece, race, sexe, age, "
+        String sql = "INSERT INTO animal (personnel_id, nom, espece, race, sexe, age, poids, "
                 + "description, photo_url, statut, date_arrivee) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -78,14 +78,14 @@ public class AnimalDAO {
 
     public void update(Animal animal) {
         String sql = "UPDATE animal SET personnel_id = ?, nom = ?, espece = ?, race = ?, "
-                + "sexe = ?, age = ?, description = ?, photo_url = ?, statut = ?, "
+                + "sexe = ?, age = ?, poids = ?, description = ?, photo_url = ?, statut = ?, "
                 + "date_arrivee = ? WHERE id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             remplir(statement, animal);
-            statement.setInt(11, animal.getId());
+            statement.setInt(12, animal.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de la modification de l'animal.", e);
@@ -112,10 +112,11 @@ public class AnimalDAO {
         statement.setString(4, animal.getRace());
         statement.setString(5, animal.getSexe().name());
         statement.setInt(6, animal.getAge());
-        statement.setString(7, animal.getDescription());
-        statement.setString(8, animal.getPhotoUrl());
-        statement.setString(9, animal.getStatut().name());
-        statement.setObject(10, animal.getDateArrivee());
+        statement.setBigDecimal(7, animal.getPoids());
+        statement.setString(8, animal.getDescription());
+        statement.setString(9, animal.getPhotoUrl());
+        statement.setString(10, animal.getStatut().name());
+        statement.setObject(11, animal.getDateArrivee());
     }
 
     private Animal mapper(ResultSet result) throws SQLException {
@@ -127,6 +128,7 @@ public class AnimalDAO {
         animal.setRace(result.getString("race"));
         animal.setSexe(Sexe.valueOf(result.getString("sexe")));
         animal.setAge(result.getInt("age"));
+        animal.setPoids(result.getBigDecimal("poids"));
         animal.setDescription(result.getString("description"));
         animal.setPhotoUrl(result.getString("photo_url"));
         animal.setStatut(StatutAnimal.valueOf(result.getString("statut")));
