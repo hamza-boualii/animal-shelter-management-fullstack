@@ -1,5 +1,6 @@
 package tn.enicarthage.shelter.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import tn.enicarthage.shelter.model.Espece;
@@ -14,6 +15,7 @@ public class AnimalRequest {
     private String race;
     private Sexe sexe;
     private int age;
+    private BigDecimal poids;
     private String description;
     private String photoUrl;
     private StatutAnimal statut;
@@ -65,6 +67,14 @@ public class AnimalRequest {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public BigDecimal getPoids() {
+        return poids;
+    }
+
+    public void setPoids(BigDecimal poids) {
+        this.poids = poids;
     }
 
     public String getDescription() {
