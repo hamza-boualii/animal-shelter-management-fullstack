@@ -22,7 +22,7 @@ export default function AuthShell({
   trust,
 }) {
   return (
-    <section className="relative isolate min-h-[85vh] overflow-hidden bg-[#FFF8F5] px-4 py-10 sm:px-6 sm:py-14">
+    <section className="relative isolate min-h-[85vh] overflow-hidden bg-[#FFF8F5] px-4 pt-6 pb-10 sm:px-6 sm:pt-6 sm:pb-14">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-[#FDEFE7] blur-3xl" />
         <div className="absolute -right-24 top-20 h-80 w-80 rounded-full bg-brand-peach/20 blur-3xl" />
@@ -45,20 +45,20 @@ export default function AuthShell({
           <RiveMascot variant={variant} />
         </div>
 
-        <div className="relative z-10 w-full rounded-[24px] bg-white p-6 shadow-[0px_12px_32px_-4px_rgba(52,46,43,0.08),0px_4px_12px_-2px_rgba(52,46,43,0.04)] sm:p-8">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#FDF1EC] px-3 py-1">
+        <div className="relative z-10 w-full rounded-[24px] bg-white p-6 shadow-[0px_12px_32px_-4px_rgba(52,46,43,0.08),0px_4px_12px_-2px_rgba(52,46,43,0.04)] sm:px-8 sm:pb-8">
+          <div className="mb-4 flex flex-col items-center text-center">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#FDF1EC] px-3 py-1">
               <span className="h-2 w-2 rounded-full bg-brand-burnt" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-taupe">
                 Portail Refuge • Sanctuary Portal
               </span>
             </div>
 
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C65335] text-white shadow-[0px_4px_12px_rgba(198,83,53,0.25)]">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C65335] text-white shadow-[0px_4px_12px_rgba(198,83,53,0.25)]">
               <PawMark className="h-6 w-6" />
             </div>
 
-            <div className="mb-1 flex items-center justify-center gap-2.5">
+            <div className="mb-0.5 flex items-center justify-center gap-2.5">
               <span className="text-2xl font-bold tracking-tight text-[#201A18]">Rafiq</span>
               <span className="font-light text-brand-stone">|</span>
               <span className="font-arabic text-2xl font-bold text-brand-burnt" dir="rtl" lang="ar">
@@ -66,14 +66,14 @@ export default function AuthShell({
               </span>
             </div>
 
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-brand-taupe">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-brand-taupe">
               Sanctuaire &amp; Adoption Animale
             </p>
 
             <h1 className="text-[22px] font-semibold tracking-tight text-[#201A18] sm:text-2xl">
               {title}
             </h1>
-            <p className="mt-1.5 max-w-[340px] text-[13px] leading-relaxed text-brand-taupe">
+            <p className="mt-1 max-w-[340px] text-[13px] leading-relaxed text-brand-taupe">
               {description}
             </p>
           </div>
