@@ -6,15 +6,21 @@ public class LoginResponse {
     private String role;
     private String nom;
     private String email;
+    private String telephone;
 
     public LoginResponse() {
     }
 
     public LoginResponse(int id, String role, String nom, String email) {
+        this(id, role, nom, email, null);
+    }
+
+    public LoginResponse(int id, String role, String nom, String email, String telephone) {
         this.id = id;
         this.role = role;
         this.nom = nom;
         this.email = email;
+        this.telephone = telephone;
     }
 
     public int getId() {
@@ -47,5 +53,13 @@ public class LoginResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
     }
 }

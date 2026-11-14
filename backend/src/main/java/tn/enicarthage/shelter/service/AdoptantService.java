@@ -54,7 +54,8 @@ public class AdoptantService {
                 adoptant.getId(),
                 "ADOPTANT",
                 adoptant.getNom() + " " + adoptant.getPrenom(),
-                adoptant.getEmail()
+                adoptant.getEmail(),
+                adoptant.getTelephone()
         );
     }
 }
