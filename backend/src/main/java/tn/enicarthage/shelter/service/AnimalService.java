@@ -1,10 +1,13 @@
 package tn.enicarthage.shelter.service;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import tn.enicarthage.shelter.config.UploadConfig;
 import tn.enicarthage.shelter.dao.AnimalDAO;
 import tn.enicarthage.shelter.dao.PersonnelDAO;
 import tn.enicarthage.shelter.dto.AnimalRequest;
@@ -38,9 +41,12 @@ public class AnimalService {
 
     public AnimalResponse createAnimal(AnimalRequest request) {
         valider(request);
+        String photoUrl = request.getPhotoUrl() == null ? null : request.getPhotoUrl().trim();
+        validerPhoto(photoUrl);
         verifierPersonnel(request.getPersonnelId());
 
         Animal animal = construire(request);
+        animal.setPhotoUrl(photoUrl);
         animal.setStatut(request.getStatut() == null ? StatutAnimal.DISPONIBLE : request.getStatut());
         animal.setDateArrivee(request.getDateArrivee() == null ? LocalDate.now() : request.getDateArrivee());
 
@@ -53,7 +59,13 @@ public class AnimalService {
         valider(request);
         verifierPersonnel(request.getPersonnelId());
 
+        String photoUrl = request.getPhotoUrl() == null || request.getPhotoUrl().isBlank()
+                ? existant.getPhotoUrl()
+                : request.getPhotoUrl().trim();
+        validerPhoto(photoUrl);
+
         Animal animal = construire(request);
+        animal.setPhotoUrl(photoUrl);
         animal.setId(existant.getId());
         animal.setStatut(request.getStatut() == null ? existant.getStatut() : request.getStatut());
         animal.setDateArrivee(request.getDateArrivee() == null
@@ -89,6 +101,25 @@ public class AnimalService {
                 "Le poids ne peut pas depasser deux decimales.");
         ValidationUtil.requireAtMost(request.getPoids(), new BigDecimal("9999.99"),
                 "Le poids depasse la capacite maximale autorisee.");
+    }
+
+    private void validerPhoto(String photoUrl) {
+        ValidationUtil.requireText(photoUrl, "La photo de l'animal est obligatoire.");
+        String prefixe = "/uploads/animals/";
+        if (!photoUrl.startsWith(prefixe)) {
+            throw new IllegalArgumentException(
+                    "La photo de l'animal doit etre une image televersee.");
+        }
+        String nomFichier = photoUrl.substring(prefixe.length());
+        if (nomFichier.isBlank() || nomFichier.contains("/") || nomFichier.contains("\\")
+                || nomFichier.contains("..")) {
+            throw new IllegalArgumentException("La photo de l'animal est invalide.");
+        }
+        Path fichier = UploadConfig.getAnimalsUploadDir().resolve(nomFichier).normalize();
+        if (!Files.isRegularFile(fichier)) {
+            throw new IllegalArgumentException(
+                    "Le fichier de la photo de l'animal est introuvable.");
+        }
     }
 
     private void verifierPersonnel(int personnelId) {

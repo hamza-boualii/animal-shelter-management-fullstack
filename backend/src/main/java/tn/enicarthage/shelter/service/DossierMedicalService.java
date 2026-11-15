@@ -40,6 +40,11 @@ public class DossierMedicalService {
         valider(request);
         verifierReferences(request);
 
+        DossierMedical existant = dossierDAO.findByAnimalId(request.getAnimalId());
+        if (existant != null) {
+            throw new IllegalArgumentException("Un dossier medical existe deja pour cet animal.");
+        }
+
         DossierMedical dossier = construire(request);
         dossierDAO.create(dossier);
         return DossierMedicalResponse.from(dossier);
@@ -49,6 +54,11 @@ public class DossierMedicalService {
         DossierMedical existant = findDossier(id);
         valider(request);
         verifierReferences(request);
+
+        DossierMedical existantPourAnimal = dossierDAO.findByAnimalId(request.getAnimalId());
+        if (existantPourAnimal != null && existantPourAnimal.getId() != id) {
+            throw new IllegalArgumentException("Un dossier medical existe deja pour cet animal.");
+        }
 
         DossierMedical dossier = construire(request);
         dossier.setId(existant.getId());

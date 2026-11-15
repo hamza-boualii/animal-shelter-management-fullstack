@@ -13,6 +13,9 @@ export default function DossiersMedicauxPage() {
   const { tousLesAnimaux } = useAnimaux()
   const { utilisateur } = useAuth()
 
+  const animauxAvecDossier = new Set(dossiers.map((d) => d.animalId))
+  const animauxEligibles = tousLesAnimaux.filter((a) => !animauxAvecDossier.has(a.id))
+
   const [modalOuvert, setModalOuvert] = useState(false)
   const [dossierEnEdition, setDossierEnEdition] = useState(null)
   const [chargementAction, setChargementAction] = useState(false)
@@ -57,7 +60,7 @@ export default function DossiersMedicauxPage() {
   const ouvrirAjout = () => {
     setDossierEnEdition(null)
     setForm({
-      animalId: tousLesAnimaux[0]?.id || '',
+      animalId: animauxEligibles[0]?.id ? String(animauxEligibles[0].id) : '',
       personnelId: utilisateur?.id || 1,
       sterilise: false,
       allergies: '',
@@ -292,18 +295,44 @@ export default function DossiersMedicauxPage() {
             <select
               name="animalId"
               required
-              disabled={Boolean(dossierEnEdition)}
+              disabled={Boolean(dossierEnEdition) || (!dossierEnEdition && animauxEligibles.length === 0)}
               value={form.animalId}
               onChange={changer}
-              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-xs sm:text-sm focus:outline-none focus:border-brand-burnt"
+              className="w-full h-11 px-3.5 rounded-xl border border-brand-stone bg-white text-xs sm:text-sm focus:outline-none focus:border-brand-burnt disabled:bg-brand-stone/20 disabled:text-brand-taupe disabled:cursor-not-allowed"
             >
-              <option value="">Sélectionner un animal...</option>
-              {tousLesAnimaux.map((a) => (
-                <option key={a.id} value={a.id}>
-                  #{a.id} — {a.nom} ({a.espece})
-                </option>
-              ))}
+              {dossierEnEdition ? (
+                (() => {
+                  const a = tousLesAnimaux.find((anim) => anim.id === form.animalId)
+                  return (
+                    <option value={form.animalId}>
+                      #{form.animalId} — {a?.nom || 'Animal'} ({a?.espece || ''})
+                    </option>
+                  )
+                })()
+              ) : animauxEligibles.length === 0 ? (
+                <option value="">Aucun animal éligible disponible</option>
+              ) : (
+                <>
+                  <option value="">Sélectionner un animal...</option>
+                  {animauxEligibles.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      #{a.id} — {a.nom} ({a.espece})
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
+
+            {!dossierEnEdition && animauxEligibles.length === 0 && (
+              <div className="mt-2 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
+                <svg className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>
+                  Tous les animaux enregistrés possèdent déjà un dossier médical. Chaque animal ne peut avoir qu’un seul dossier médical.
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3 p-3.5 bg-[#FFF8F5] rounded-xl border border-brand-burnt/15">
@@ -376,11 +405,11 @@ export default function DossiersMedicauxPage() {
             ></textarea>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-brand-stone">
+          <div className="sticky bottom-0 -mx-6 flex justify-end gap-3 px-6 pt-3 border-t border-brand-stone bg-white">
             <Bouton variant="secondary" onClick={fermerModal} disabled={chargementAction}>
               Annuler
             </Bouton>
-            <Bouton type="submit" variant="primary" chargement={chargementAction}>
+            <Bouton type="submit" variant="primary" chargement={chargementAction} disabled={chargementAction || (!dossierEnEdition && animauxEligibles.length === 0)}>
               Enregistrer le carnet
             </Bouton>
           </div>

@@ -30,6 +30,9 @@ public class DossierMedicalDAO {
                 }
             }
         } catch (SQLException e) {
+            if (e.getErrorCode() == 1062 || "23000".equals(e.getSQLState())) {
+                throw new IllegalArgumentException("Un dossier medical existe deja pour cet animal.", e);
+            }
             throw new RuntimeException("Erreur lors de la creation du dossier medical.", e);
         }
     }
@@ -72,6 +75,26 @@ public class DossierMedicalDAO {
         return null;
     }
 
+    public DossierMedical findByAnimalId(int animalId) {
+        String sql = "SELECT * FROM dossier_medical WHERE animal_id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, animalId);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return mapper(result);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la recherche du dossier medical par animal.", e);
+        }
+
+        return null;
+    }
+
     public void update(DossierMedical dossier) {
         String sql = "UPDATE dossier_medical SET animal_id = ?, personnel_id = ?, sterilise = ?, "
                 + "allergies = ?, vaccins_recus = ?, traitements_en_cours = ?, description = ?, "
@@ -84,6 +107,9 @@ public class DossierMedicalDAO {
             statement.setInt(9, dossier.getId());
             statement.executeUpdate();
         } catch (SQLException e) {
+            if (e.getErrorCode() == 1062 || "23000".equals(e.getSQLState())) {
+                throw new IllegalArgumentException("Un dossier medical existe deja pour cet animal.", e);
+            }
             throw new RuntimeException("Erreur lors de la modification du dossier medical.", e);
         }
     }

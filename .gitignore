@@ -28,3 +28,6 @@ assets/
 
 # Runtime logs
 logs/
+
+# Uploaded animal images
+uploads/

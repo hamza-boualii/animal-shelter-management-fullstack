@@ -394,7 +394,7 @@ export default function GestionDonsPage() {
             ></textarea>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-brand-stone">
+          <div className="sticky bottom-0 -mx-6 flex justify-end gap-3 px-6 pt-3 border-t border-brand-stone bg-white">
             <Bouton variant="secondary" onClick={fermerModal} disabled={chargementAction}>
               Annuler
             </Bouton>

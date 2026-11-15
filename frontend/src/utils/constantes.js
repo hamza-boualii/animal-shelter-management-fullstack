@@ -60,9 +60,3 @@ export const ROLES = {
   ADOPTANT: 'ADOPTANT',
   PERSONNEL: 'PERSONNEL',
 }
-
-export const DEFAULT_ANIMAL_IMAGES = {
-  CHIEN: '/images/animals/golden-retriever.png',
-  CHAT: '/images/animals/sleeping-kitten.png',
-  AUTRE: '/images/animals/animal-2.png',
-}

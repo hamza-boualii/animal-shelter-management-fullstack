@@ -72,6 +72,8 @@ CREATE TABLE dossier_medical (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_dossier_animal
         FOREIGN KEY (animal_id) REFERENCES animal(id) ON DELETE CASCADE,
+    CONSTRAINT uq_dossier_medical_animal
+        UNIQUE (animal_id),
     CONSTRAINT fk_dossier_personnel
         FOREIGN KEY (personnel_id) REFERENCES personnel(id)
 );
@@ -92,32 +94,7 @@ CREATE TABLE don (
         FOREIGN KEY (personnel_id) REFERENCES personnel(id)
 );
 
--- 3. Donnees de test
+-- 3. Comptes du personnel
 INSERT INTO personnel (username, email, mot_de_passe) VALUES
 ('admin', 'admin@shelter.tn', 'personnel123'),
 ('soignant', 'soignant@shelter.tn', 'personnel123');
-
-INSERT INTO adoptant (nom, prenom, email, mot_de_passe, telephone) VALUES
-('Ben Ali', 'Amine', 'amine.benali@mail.tn', 'adoptant123', '98123456'),
-('Trabelsi', 'Sarra', 'sarra.trabelsi@mail.tn', 'adoptant123', '97456789');
-
-INSERT INTO animal (personnel_id, nom, espece, race, sexe, age, poids, description, photo_url, statut, date_arrivee) VALUES
-(1, 'Rex', 'CHIEN', 'Berger allemand', 'MALE', 3, 32.50, 'Chien calme et obeissant, habitue aux enfants.', NULL, 'EN_ATTENTE_ADOPTION', '2026-09-10'),
-(2, 'Minou', 'CHAT', 'Siamois', 'FEMELLE', 2, 4.20, 'Chatte sociable et propre.', NULL, 'DISPONIBLE', '2026-09-15'),
-(1, 'Bella', 'CHIEN', 'Labrador', 'FEMELLE', 4, 28.00, 'Chienne affectueuse, en cours de soins.', NULL, 'EN_SOIN', '2026-10-01'),
-(2, 'Luna', 'CHAT', 'Europeen', 'FEMELLE', 1, 3.75, 'Jeune chatte joueuse.', NULL, 'ADOPTE', '2026-10-20'),
-(1, 'Max', 'CHIEN', 'Husky', 'MALE', 5, 24.50, 'Chien energique, a besoin d\'espace.', NULL, 'DISPONIBLE', '2026-08-05');
-
-INSERT INTO demande_adoption (animal_id, adoptant_id, date_demande, statut, motif) VALUES
-(1, 1, '2026-10-25', 'EN_ATTENTE', 'Je dispose d\'un jardin et je souhaite adopter un chien.'),
-(4, 2, '2026-10-22', 'ACCEPTEE', 'Je recherche un chat de compagnie.'),
-(2, 1, '2026-10-18', 'REFUSEE', 'Demande retiree par l\'adoptant.');
-
-INSERT INTO dossier_medical (animal_id, personnel_id, sterilise, allergies, vaccins_recus, traitements_en_cours, description, photo_urls) VALUES
-(2, 2, TRUE, 'Aucune', 'RCP, Rage', 'Aucun', 'Examen general satisfaisant.', NULL),
-(3, 1, FALSE, 'Penicilline', 'DHPP', 'Antibiotique pendant 5 jours', 'Surveillance de la patte arriere droite.', NULL),
-(4, 2, TRUE, 'Aucune', 'RCP, Rage', 'Aucun', 'Animale en bonne sante avant adoption.', NULL);
-
-INSERT INTO don (personnel_id, type_don, valeur, description, date_don, nom_donateur, telephone_donateur, photo_url) VALUES
-(1, 'ARGENT', 250.00, 'Don pour l\'achat de croquettes.', '2026-10-01', 'Ahmed Ben Ali', '98123456', NULL),
-(2, 'NATURE', 120.00, 'Croquettes et couvertures.', '2026-10-12', 'Sara Trabelsi', '97456789', NULL);

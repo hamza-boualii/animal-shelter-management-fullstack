@@ -8,12 +8,14 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import com.sun.net.httpserver.HttpExchange;
 
+import tn.enicarthage.shelter.config.UploadConfig;
 import tn.enicarthage.shelter.controller.AdoptantController;
 import tn.enicarthage.shelter.controller.AnimalController;
 import tn.enicarthage.shelter.controller.AuthController;
 import tn.enicarthage.shelter.controller.DemandeAdoptionController;
 import tn.enicarthage.shelter.controller.DonController;
 import tn.enicarthage.shelter.controller.DossierMedicalController;
+import tn.enicarthage.shelter.dao.PersonnelDAO;
 import tn.enicarthage.shelter.dto.AdoptantRequest;
 import tn.enicarthage.shelter.dto.AnimalRequest;
 import tn.enicarthage.shelter.dto.DemandeAdoptionRequest;
@@ -22,17 +24,25 @@ import tn.enicarthage.shelter.dto.DonRequest;
 import tn.enicarthage.shelter.dto.DossierMedicalRequest;
 import tn.enicarthage.shelter.dto.LoginRequest;
 import tn.enicarthage.shelter.exception.ResourceNotFoundException;
+import tn.enicarthage.shelter.service.ImageUploadService;
+import tn.enicarthage.shelter.util.MultipartUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Router {
 
-    private record Reponse(int statut, String corps) {
+    private record Reponse(int statut, String contentType, byte[] corps) {
+        public Reponse(int statut, String corpsJson) {
+            this(statut, "application/json; charset=utf-8",
+                    corpsJson == null ? new byte[0] : corpsJson.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     private record Erreur(String erreur) {
@@ -57,20 +67,34 @@ public class Router {
     private final DemandeAdoptionController demandeAdoptionController = new DemandeAdoptionController();
     private final DossierMedicalController dossierMedicalController = new DossierMedicalController();
     private final DonController donController = new DonController();
+    private final ImageUploadService imageUploadService = new ImageUploadService();
+    private final PersonnelDAO personnelDAO = new PersonnelDAO();
 
     public void dispatcher(HttpExchange exchange) throws IOException {
         String methode = exchange.getRequestMethod();
+
+        if ("OPTIONS".equalsIgnoreCase(methode)) {
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Personnel-Id, X-User-Role");
+            exchange.sendResponseHeaders(204, -1);
+            exchange.close();
+            return;
+        }
+
         String[] segments = exchange.getRequestURI().getPath().split("/");
 
         try {
             Reponse reponse = router(methode, segments, exchange);
-            envoyer(exchange, reponse.statut(), reponse.corps());
+            envoyer(exchange, reponse.statut(), reponse.contentType(), reponse.corps());
         } catch (ResourceNotFoundException e) {
-            envoyer(exchange, 404, messageErreur(e));
+            envoyerJson(exchange, 404, messageErreur(e));
+        } catch (SecurityException e) {
+            envoyerJson(exchange, 401, messageErreur(e));
         } catch (IllegalArgumentException e) {
-            envoyer(exchange, 400, messageErreur(e));
+            envoyerJson(exchange, 400, messageErreur(e));
         } catch (Exception e) {
-            envoyer(exchange, 500, messageErreur(e));
+            envoyerJson(exchange, 500, messageErreur(e));
         }
     }
 
@@ -83,6 +107,8 @@ public class Router {
         switch (segments[1]) {
             case "animaux":
                 return routesAnimaux(methode, segments, exchange);
+            case "uploads":
+                return routesUploads(methode, segments, exchange);
             case "adoptants":
                 return routesAdoptants(methode, segments, exchange);
             case "auth":
@@ -122,6 +148,13 @@ public class Router {
         }
 
         if (segments.length == 3) {
+            if ("upload".equals(segments[2])) {
+                if ("POST".equals(methode)) {
+                    return gererUpload(exchange);
+                }
+                throw new IllegalArgumentException("Methode non supportee : " + methode + " /animaux/upload");
+            }
+
             int id = entier(segments[2]);
             switch (methode) {
                 case "GET":
@@ -321,6 +354,103 @@ public class Router {
         throw new ResourceNotFoundException("Route inconnue : /" + String.join("/", segments));
     }
 
+    private Reponse routesUploads(String methode, String[] segments, HttpExchange exchange)
+            throws IOException {
+        if ("GET".equals(methode)) {
+            return gererTelechargement(segments);
+        }
+        if ("POST".equals(methode)) {
+            return gererUpload(exchange);
+        }
+        throw new IllegalArgumentException("Methode non supportee : " + methode + " /uploads");
+    }
+
+    private Reponse gererUpload(HttpExchange exchange) throws IOException {
+        verifierPersonnel(exchange);
+
+        String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+        byte[] corpsBrut;
+        try (InputStream input = exchange.getRequestBody()) {
+            corpsBrut = input.readAllBytes();
+        }
+
+        if (corpsBrut.length == 0) {
+            throw new IllegalArgumentException("Le fichier image est vide.");
+        }
+
+        byte[] imageBytes = MultipartUtil.extraireFichier(corpsBrut, contentType);
+        String cheminRelatif = imageUploadService.enregistrerImageAnimal(imageBytes);
+
+        record UploadDto(String photoUrl, String url) {
+        }
+
+        return new Reponse(200, gson.toJson(new UploadDto(cheminRelatif, cheminRelatif)));
+    }
+
+    private void verifierPersonnel(HttpExchange exchange) {
+        String personnelIdHeader = exchange.getRequestHeaders().getFirst("X-Personnel-Id");
+        if (personnelIdHeader == null || personnelIdHeader.isBlank()) {
+            String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+            if (authHeader != null && !authHeader.isBlank()) {
+                if (authHeader.startsWith("Bearer ")) {
+                    personnelIdHeader = authHeader.substring(7).trim();
+                } else if (authHeader.startsWith("Personnel ")) {
+                    personnelIdHeader = authHeader.substring(10).trim();
+                } else {
+                    personnelIdHeader = authHeader.trim();
+                }
+            }
+        }
+
+        if (personnelIdHeader == null || personnelIdHeader.isBlank()) {
+            throw new SecurityException("Acces refuse : authentification requise pour televerser une image.");
+        }
+
+        try {
+            int personnelId = Integer.parseInt(personnelIdHeader);
+            if (personnelDAO.findById(personnelId) == null) {
+                throw new SecurityException("Acces refuse : personnel introuvable.");
+            }
+        } catch (NumberFormatException e) {
+            throw new SecurityException("Acces refuse : identifiant personnel invalide.");
+        }
+    }
+
+    private Reponse gererTelechargement(String[] segments) throws IOException {
+        String sousDossier = "";
+        String nomFichier = "";
+
+        if (segments.length == 3) {
+            nomFichier = segments[2];
+        } else if (segments.length == 4) {
+            sousDossier = segments[2];
+            nomFichier = segments[3];
+        } else {
+            throw new ResourceNotFoundException("Fichier introuvable.");
+        }
+
+        if (nomFichier.contains("..") || nomFichier.contains("/") || nomFichier.contains("\\") ||
+                sousDossier.contains("..") || sousDossier.contains("/") || sousDossier.contains("\\")) {
+            throw new IllegalArgumentException("Chemin de fichier non autorise.");
+        }
+
+        Path uploadsRoot = UploadConfig.getUploadDir().normalize();
+        Path target;
+        if (!sousDossier.isBlank()) {
+            target = uploadsRoot.resolve(sousDossier).resolve(nomFichier).normalize();
+        } else {
+            target = uploadsRoot.resolve(nomFichier).normalize();
+        }
+
+        if (!target.startsWith(uploadsRoot) || !Files.isRegularFile(target)) {
+            throw new ResourceNotFoundException("Image introuvable : " + nomFichier);
+        }
+
+        String mime = ImageUploadService.getMimeType(nomFichier);
+        byte[] bytes = Files.readAllBytes(target);
+        return new Reponse(200, mime, bytes);
+    }
+
     private <T> T lireCorps(HttpExchange exchange, Class<T> type) throws IOException {
         try (InputStream input = exchange.getRequestBody()) {
             String corps = new String(input.readAllBytes(), StandardCharsets.UTF_8);
@@ -352,10 +482,15 @@ public class Router {
         return gson.toJson(new Erreur(message));
     }
 
-    private void envoyer(HttpExchange exchange, int statut, String corps) throws IOException {
-        byte[] bytes = corps == null ? new byte[0] : corps.getBytes(StandardCharsets.UTF_8);
-        if (bytes.length > 0) {
-            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+    private void envoyerJson(HttpExchange exchange, int statut, String corpsJson) throws IOException {
+        byte[] bytes = corpsJson == null ? new byte[0] : corpsJson.getBytes(StandardCharsets.UTF_8);
+        envoyer(exchange, statut, "application/json; charset=utf-8", bytes);
+    }
+
+    private void envoyer(HttpExchange exchange, int statut, String contentType, byte[] bytes) throws IOException {
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        if (bytes != null && bytes.length > 0) {
+            exchange.getResponseHeaders().set("Content-Type", contentType);
             exchange.sendResponseHeaders(statut, bytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
                 os.write(bytes);

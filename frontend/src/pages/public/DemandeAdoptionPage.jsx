@@ -3,11 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { animauxApi } from '../../api/animauxApi'
 import { useDemandes } from '../../hooks/useDemandes'
 import { useAuth } from '../../hooks/useAuth'
-import { DEFAULT_ANIMAL_IMAGES, ESPECES, STATUTS_ANIMAL } from '../../utils/constantes'
+import { ESPECES, STATUTS_ANIMAL } from '../../utils/constantes'
 import Bouton from '../../components/ui/Bouton'
 import Chargement from '../../components/ui/Chargement'
 import Notification from '../../components/ui/Notification'
 import AuthIcon from '../../components/auth/AuthIcon'
+import AnimalPhoto from '../../components/animals/AnimalPhoto'
 import ConfirmationDemandeModal from '../../components/adoption/ConfirmationDemandeModal'
 
 export default function DemandeAdoptionPage() {
@@ -125,10 +126,7 @@ export default function DemandeAdoptionPage() {
   const telephone = utilisateur?.telephone?.trim() || ''
   const especeInfo = ESPECES[animal.espece] || { label: animal.espece, icone: '🐾' }
   const statutInfo = STATUTS_ANIMAL[animal.statut] || STATUTS_ANIMAL.DISPONIBLE
-  const photo =
-    animal.photoUrl ||
-    DEFAULT_ANIMAL_IMAGES[animal.espece] ||
-    '/images/animals/golden-retriever.png'
+  const photo = animal.photoUrl || ''
   const ageLabel = `${animal.age} an${animal.age > 1 ? 's' : ''}`
 
   const gererSoumission = async (e) => {
@@ -198,7 +196,7 @@ export default function DemandeAdoptionPage() {
         <aside className="lg:col-span-5">
           <div className="rounded-3xl border border-brand-stone bg-white p-5 shadow-warm-md lg:sticky lg:top-28">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-brand-surface">
-              <img
+              <AnimalPhoto
                 src={photo}
                 alt={animal.nom}
                 className="h-full w-full object-cover object-center"
