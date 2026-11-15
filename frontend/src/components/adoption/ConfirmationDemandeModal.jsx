@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { animate } from 'animejs'
-import { DEFAULT_ANIMAL_IMAGES, ESPECES } from '../../utils/constantes'
+import { ESPECES } from '../../utils/constantes'
+import AnimalPhoto from '../animals/AnimalPhoto'
 
 const SELECTEUR_FOCUS =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -82,10 +83,7 @@ export default function ConfirmationDemandeModal({ animal, telephone, onFermer }
   }, [onFermer])
 
   const especeInfo = ESPECES[animal?.espece] || { label: animal?.espece || 'Animal' }
-  const photo =
-    animal?.photoUrl ||
-    DEFAULT_ANIMAL_IMAGES[animal?.espece] ||
-    '/images/animals/golden-retriever.png'
+  const photo = animal?.photoUrl || ''
   const age = Number(animal?.age)
   const ageLabel = Number.isFinite(age) ? `${age} an${age > 1 ? 's' : ''}` : 'Âge non renseigné'
   const telephoneAffiche = telephone?.trim()
@@ -140,7 +138,7 @@ export default function ConfirmationDemandeModal({ animal, telephone, onFermer }
 
               <div className="mt-3 flex items-center gap-3 rounded-2xl border border-brand-stone bg-brand-card p-2.5 text-left">
                 <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-brand-stone bg-brand-surface">
-                  <img
+                  <AnimalPhoto
                     src={photo}
                     alt={animal?.nom || 'Animal'}
                     className="h-12 w-12 rounded-xl object-cover object-center"

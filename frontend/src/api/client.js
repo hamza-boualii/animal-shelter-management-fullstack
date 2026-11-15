@@ -6,14 +6,18 @@
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 async function requete(path, options = {}) {
-  const { headers, ...reste } = options
+  const { headers = {}, ...reste } = options
+
+  const headersFinaux = { ...headers }
+  if (reste.body instanceof FormData) {
+    delete headersFinaux['Content-Type']
+  } else if (!headersFinaux['Content-Type']) {
+    headersFinaux['Content-Type'] = 'application/json'
+  }
 
   const reponse = await fetch(`${API_URL}${path}`, {
     ...reste,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: headersFinaux,
   })
 
   // Un DELETE réussi ou réponse vide renvoie 204 : pas de corps à lire
@@ -46,4 +50,6 @@ export const api = {
   put: (path, body, options) =>
     requete(path, { ...options, method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
   delete: (path, options) => requete(path, { ...options, method: 'DELETE' }),
+  upload: (path, formData, options) =>
+    requete(path, { ...options, method: 'POST', body: formData }),
 }

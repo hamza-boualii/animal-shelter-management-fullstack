@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { STATUTS_ANIMAL, DEFAULT_ANIMAL_IMAGES } from '../../utils/constantes'
+import { STATUTS_ANIMAL } from '../../utils/constantes'
+import AnimalPhoto from '../animals/AnimalPhoto'
 import Bouton from '../ui/Bouton'
 import MascotCameo from '../ui/MascotCameo'
 
@@ -10,52 +11,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
 
-  // Utiliser les animaux réels du backend
-  // Si la base de données est vide, nous présentons la liste de base avec les photographies fournies
-  const displayAnimals = animaux.length > 0
-    ? animaux.slice(0, 5)
-    : [
-        {
-          id: 1,
-          nom: 'Rex',
-          espece: 'CHIEN',
-          race: 'Berger Allemand & Golden',
-          age: 3,
-          statut: 'DISPONIBLE',
-          description: 'Compagnon calme, fidèle et habitué aux enfants.',
-          photoUrl: '/images/animals/golden-retriever.png',
-        },
-        {
-          id: 2,
-          nom: 'Luna',
-          espece: 'CHAT',
-          race: 'Européen doux',
-          age: 2,
-          statut: 'DISPONIBLE',
-          description: 'Chatte sociable, propre et très affectueuse.',
-          photoUrl: '/images/animals/sleeping-kitten.png',
-        },
-        {
-          id: 3,
-          nom: 'Zephyr',
-          espece: 'CHIEN',
-          race: 'Collie & Husky Mix',
-          age: 1,
-          statut: 'DISPONIBLE',
-          description: 'Agile, intelligent et idéal pour de longues promenades.',
-          photoUrl: '/images/animals/animal-2.png',
-        },
-        {
-          id: 4,
-          nom: 'Minou',
-          espece: 'CHAT',
-          race: 'Siamois croisé',
-          age: 2,
-          statut: 'EN_ATTENTE_ADOPTION',
-          description: 'Très curieuse, adore observer les oiseaux depuis la fenêtre.',
-          photoUrl: '/images/animals/sleeping-kitten.png',
-        },
-      ]
+  const displayAnimals = animaux.slice(0, 5)
 
   const total = displayAnimals.length
 
@@ -86,6 +42,21 @@ export default function FeaturedCarousel({ animaux = [] }) {
       window.removeEventListener('resize', gererScroll)
     }
   }, [gererScroll])
+
+  if (total === 0) {
+    return (
+      <section id="featured-animals" className="bg-white py-16">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-brand-dark">
+            Aucun animal n’est encore présenté
+          </h2>
+          <p className="mt-2 text-sm text-brand-dark/70">
+            Les animaux ajoutés par l’équipe du refuge apparaîtront ici.
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   // Déplacement via flèches : fait défiler la page jusqu'au cran correspondant
   const naviguerVers = (nouvelIndex) => {
@@ -194,10 +165,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
               else if (diff === -1) classe3D = 'prev'
               else if (diff === 1) classe3D = 'next'
 
-              const photoSource =
-                animal.photoUrl ||
-                DEFAULT_ANIMAL_IMAGES[animal.espece] ||
-                '/images/animals/golden-retriever.png'
+              const photoSource = animal.photoUrl || ''
 
               const statutInfo = STATUTS_ANIMAL[animal.statut] || STATUTS_ANIMAL.DISPONIBLE
 
@@ -210,7 +178,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
                   className={`carousel-item flex-none w-[290px] sm:w-[320px] bg-brand-card rounded-3xl overflow-hidden border border-brand-burnt/15 shadow-md flex flex-col justify-between ${classe3D} ${diff !== 0 ? 'cursor-pointer hover:border-brand-burnt/40' : ''}`}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-brand-surface">
-                    <img
+                    <AnimalPhoto
                       src={photoSource}
                       alt={animal.nom}
                       className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"

@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { animate } from 'animejs'
 import {
-  DEFAULT_ANIMAL_IMAGES,
   ESPECES,
   SEXES,
   STATUTS_ANIMAL,
 } from '../../utils/constantes'
+import AnimalPhoto from './AnimalPhoto'
 import { formaterDate } from '../../utils/dates'
 import { formaterPoids } from '../../utils/nombres'
 
@@ -46,10 +46,7 @@ export default function AnimalProfileCard({
   const profil = PROFILS_STATUT[animal.statut] || PROFILS_STATUT.DISPONIBLE
   const especeInfo = ESPECES[animal.espece] || { label: animal.espece }
   const sexeInfo = SEXES[animal.sexe] || { label: animal.sexe, symbole: '' }
-  const photo =
-    animal.photoUrl ||
-    DEFAULT_ANIMAL_IMAGES[animal.espece] ||
-    '/images/animals/golden-retriever.png'
+  const photo = animal.photoUrl || ''
   const estEnAttente = animal.statut === 'EN_ATTENTE_ADOPTION'
 
   useEffect(() => {
@@ -195,7 +192,7 @@ export default function AnimalProfileCard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <div className="lg:col-span-5 flex flex-col">
           <div className="relative w-full aspect-[4/3] sm:aspect-square lg:aspect-[4/5] rounded-2xl overflow-hidden bg-brand-surface border border-brand-stone shadow-sm group">
-            <img
+            <AnimalPhoto
               src={photo}
               alt={`Portrait de ${animal.nom}`}
               className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"

@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
-import { STATUTS_ANIMAL, DEFAULT_ANIMAL_IMAGES, SEXES } from '../../utils/constantes'
+import { STATUTS_ANIMAL, SEXES } from '../../utils/constantes'
+import AnimalPhoto from './AnimalPhoto'
 
 export default function AnimalCard({ animal, index = 0 }) {
   const statutInfo = STATUTS_ANIMAL[animal.statut] || STATUTS_ANIMAL.DISPONIBLE
-  const photo =
-    animal.photoUrl ||
-    DEFAULT_ANIMAL_IMAGES[animal.espece] ||
-    '/images/animals/golden-retriever.png'
+  const photo = animal.photoUrl || ''
+
 
   const sexeInfo = SEXES[animal.sexe] || { label: animal.sexe, symbole: '' }
 
@@ -33,7 +32,7 @@ export default function AnimalCard({ animal, index = 0 }) {
       style={{ animationDelay: `${Math.min(index * 60, 480)}ms` }}
     >
       <div className="relative w-full aspect-square bg-[#FDF0E9] overflow-hidden">
-        <img
+        <AnimalPhoto
           src={photo}
           alt={animal.nom}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
