@@ -5,8 +5,14 @@ import AnimalPhoto from '../animals/AnimalPhoto'
 import Bouton from '../ui/Bouton'
 import MascotCameo from '../ui/MascotCameo'
 
+// Hauteur de la barre de navigation épinglée (h-20) : la scène du carrousel
+// se cale juste en dessous pour ne jamais passer sous le menu.
+const HAUTEUR_NAVBAR = 80
+
 export default function FeaturedCarousel({ animaux = [] }) {
   const containerRef = useRef(null)
+  const headerRef = useRef(null)
+  const stageRef = useRef(null)
   const trackRef = useRef(null)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -15,29 +21,52 @@ export default function FeaturedCarousel({ animaux = [] }) {
 
   const total = displayAnimals.length
 
+  // Position de défilement à laquelle la scène commence à être épinglée, et
+  // distance parcourue pendant qu'elle le reste. On repère la scène via le bas
+  // de l'en-tête (dans le flux normal) : l'en-tête peut ainsi défiler
+  // normalement sans consommer la progression du carrousel.
+  const mesurerZoneEpinglee = useCallback(() => {
+    const section = containerRef.current
+    const entete = headerRef.current
+    const scene = stageRef.current
+    if (!section || !entete || !scene) return null
+
+    const positionSection = section.getBoundingClientRect().top + window.scrollY
+    // La scène est le frère suivant de l'en-tête : on utilise le bas de
+    // l'en-tête (dans le flux normal) comme position statique de la scène.
+    // `scene.offsetTop` serait faussé dès que l'élément sticky est décalé.
+    const positionScene = entete.getBoundingClientRect().bottom + window.scrollY
+
+    const hauteurDefilement = section.offsetHeight - (positionScene - positionSection) - scene.offsetHeight
+    if (hauteurDefilement <= 0) return null
+
+    return {
+      debut: positionScene - HAUTEUR_NAVBAR,
+      hauteurDefilement,
+    }
+  }, [])
+
   // Synchronisation du défilement vertical avec la translation horizontale et la 3D
   const gererScroll = useCallback(() => {
-    const conteneur = containerRef.current
-    if (!conteneur) return
+    const zone = mesurerZoneEpinglee()
+    if (!zone) return
 
-    const rect = conteneur.getBoundingClientRect()
-    const hauteurTotale = conteneur.offsetHeight - window.innerHeight
-    if (hauteurTotale <= 0) return
-
-    // Progrès relatif entre 0 et 1 pendant que la section est épinglée
-    const brut = -rect.top / hauteurTotale
+    // Progrès relatif entre 0 et 1 pendant que la scène est épinglée
+    const brut = (window.scrollY - zone.debut) / zone.hauteurDefilement
     const progress = Math.min(Math.max(brut, 0), 1)
 
     setScrollProgress(progress)
     const calculeIndex = Math.min(Math.round(progress * (total - 1)), total - 1)
     setActiveIndex(calculeIndex)
-  }, [total])
+  }, [mesurerZoneEpinglee, total])
 
   useEffect(() => {
     window.addEventListener('scroll', gererScroll, { passive: true })
     window.addEventListener('resize', gererScroll)
-    gererScroll()
+    // Calcul initial différé d'une frame : évite un setState synchrone dans l'effet
+    const frame = window.requestAnimationFrame(gererScroll)
     return () => {
+      window.cancelAnimationFrame(frame)
       window.removeEventListener('scroll', gererScroll)
       window.removeEventListener('resize', gererScroll)
     }
@@ -60,24 +89,17 @@ export default function FeaturedCarousel({ animaux = [] }) {
 
   // Déplacement via flèches : fait défiler la page jusqu'au cran correspondant
   const naviguerVers = (nouvelIndex) => {
-    const conteneur = containerRef.current
-    if (!conteneur) return
+    const zone = mesurerZoneEpinglee()
+    if (!zone) return
 
     const indexCible = Math.max(0, Math.min(nouvelIndex, total - 1))
     const ratio = total > 1 ? indexCible / (total - 1) : 0
-    const hauteurTotale = conteneur.offsetHeight - window.innerHeight
-    const positionAbsolue = conteneur.offsetTop + ratio * hauteurTotale
 
     window.scrollTo({
-      top: positionAbsolue,
+      top: zone.debut + ratio * zone.hauteurDefilement,
       behavior: 'smooth',
     })
   }
-
-  // Largeur de carte et espacement
-  const cardWidth = 320
-  const gap = 24
-  const decalageHorizontal = scrollProgress * (total - 1) * (cardWidth + gap)
 
   return (
     <section
@@ -87,64 +109,71 @@ export default function FeaturedCarousel({ animaux = [] }) {
       id="featured-animals"
       data-purpose="featured-animals-showcase"
     >
-      {/* Conteneur épinglé (Sticky) pendant la progression du scroll */}
-      <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden py-8">
+      {/* En-tête de section — dans le flux normal pour laisser toute la place
+          aux cartes dans la scène épinglée ci-dessous */}
+      <div ref={headerRef} className="relative">
         {/* Filigrane d'arrière-plan */}
-        <div className="absolute top-12 right-0 pointer-events-none select-none opacity-20 -z-0">
-          <span className="text-watermark font-extrabold text-brand-peach/40 uppercase">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 overflow-hidden select-none opacity-20">
+          <span className="text-watermark absolute top-6 right-0 font-extrabold text-brand-peach/40 uppercase">
             SANCTUARY
           </span>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 mb-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-surface border border-brand-burnt/20 text-brand-burnt text-xs font-bold tracking-wider uppercase mb-2">
-                Compagnons en vedette
-              </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-dark tracking-tight">
-                Ils attendent un{' '}
-                <span className="font-serif italic font-normal text-brand-burnt">
-                  foyer chaleureux
-                </span>
-              </h2>
-              <p className="mt-2 text-brand-dark/75 text-sm sm:text-base">
-                Faites défiler la page verticalement pour explorer nos résidents. Chacun possède son profil et son dossier médical vérifié.
-              </p>
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-14 sm:px-6 lg:px-8">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-brand-surface border border-brand-burnt/20 text-brand-burnt text-xs font-bold tracking-wider uppercase mb-2">
+              Compagnons en vedette
             </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-brand-dark tracking-tight">
+              Ils attendent un{' '}
+              <span className="font-serif italic font-normal text-brand-burnt">
+                foyer chaleureux
+              </span>
+            </h2>
+            <p className="mt-2 text-brand-dark/75 text-sm sm:text-base">
+              Faites défiler la page verticalement pour explorer nos résidents. Chacun possède son profil et son dossier médical vérifié.
+            </p>
+          </div>
+        </div>
+      </div>
 
-            {/* Contrôles de navigation flèches */}
-            <div className="flex items-center gap-3">
-              <div className="text-xs font-bold text-brand-dark/70 bg-brand-cream px-3 py-1.5 rounded-full border border-brand-burnt/15">
-                {activeIndex + 1} / {total}
-              </div>
+      {/* Conteneur épinglé (Sticky) pendant la progression du scroll.
+          Sa hauteur est exactement celle disponible sous la navbar : les
+          cartes et le bouton d'exploration y sont toujours entièrement visibles. */}
+      <div
+        ref={stageRef}
+        className="sticky top-20 h-[calc(100svh-5rem)] w-full flex flex-col justify-center"
+      >
+        {/* Contrôles de navigation — conservés dans la scène épinglée */}
+        <div className="mx-auto mb-2 flex w-full max-w-7xl items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
+          <div className="text-xs font-bold text-brand-dark/70 bg-brand-cream px-3 py-1.5 rounded-full border border-brand-burnt/15">
+            {activeIndex + 1} / {total}
+          </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => naviguerVers(activeIndex - 1)}
-                  disabled={activeIndex === 0}
-                  aria-label="Animal précédent"
-                  className="w-11 h-11 rounded-full border border-brand-burnt/30 flex items-center justify-center text-brand-dark hover:bg-brand-burnt hover:text-white hover:border-brand-burnt transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-                  </svg>
-                </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => naviguerVers(activeIndex - 1)}
+              disabled={activeIndex === 0}
+              aria-label="Animal précédent"
+              className="w-11 h-11 rounded-full border border-brand-burnt/30 flex items-center justify-center text-brand-dark hover:bg-brand-burnt hover:text-white hover:border-brand-burnt transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+              </svg>
+            </button>
 
-                <button
-                  type="button"
-                  onClick={() => naviguerVers(activeIndex + 1)}
-                  disabled={activeIndex === total - 1}
-                  aria-label="Animal suivant"
-                  className="w-11 h-11 rounded-full bg-brand-burnt text-white flex items-center justify-center hover:bg-brand-orange shadow-warm-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => naviguerVers(activeIndex + 1)}
+              disabled={activeIndex === total - 1}
+              aria-label="Animal suivant"
+              className="w-11 h-11 rounded-full bg-brand-burnt text-white flex items-center justify-center hover:bg-brand-orange shadow-warm-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -154,8 +183,8 @@ export default function FeaturedCarousel({ animaux = [] }) {
             ref={trackRef}
             className="carousel-track flex items-stretch gap-6 px-8 sm:px-16"
             style={{
-              transform: `translateX(-${decalageHorizontal}px)`,
-              transition: 'transform 0.15s ease-out',
+              '--carousel-progress': scrollProgress,
+              '--carousel-steps': Math.max(total - 1, 0),
             }}
           >
             {displayAnimals.map((animal, idx) => {
@@ -175,7 +204,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
                   onClick={() => {
                     if (diff !== 0) naviguerVers(idx)
                   }}
-                  className={`carousel-item flex-none w-[290px] sm:w-[320px] bg-brand-card rounded-3xl overflow-hidden border border-brand-burnt/15 shadow-md flex flex-col justify-between ${classe3D} ${diff !== 0 ? 'cursor-pointer hover:border-brand-burnt/40' : ''}`}
+                  className={`carousel-item flex-none bg-brand-card rounded-3xl overflow-hidden border border-brand-burnt/15 shadow-md flex flex-col justify-between ${classe3D} ${diff !== 0 ? 'cursor-pointer hover:border-brand-burnt/40' : ''}`}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-brand-surface">
                     <AnimalPhoto
@@ -221,7 +250,7 @@ export default function FeaturedCarousel({ animaux = [] }) {
         </div>
 
         {/* Bouton d'exploration et mascotte */}
-        <div className="mt-4 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-2 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/animaux">
             <Bouton variant="primary" size="md">
               <span>Explorer tous les animaux du sanctuaire</span>
